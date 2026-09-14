@@ -5,15 +5,16 @@ from datetime import date
 st.title("Study Architect")
 st.write("学習を記録・分析するアプリ")
 
-if "records" not in st.session_state:
-    try:
-        with open("data/records.json", "r", encoding="utf=8") as f:
-            st.session_state["records"] = json.load(f)
-
-    except FileNotFoundError:
-        st.session_state["records"] = []
 delete_options = []
 edit_options = []
+
+def load_records():
+    try:
+        with open("data/records.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    except FileNotFoundError:
+        return []  
 
 def save_records():
     with open("data/records.json", "w", encoding="utf-8") as f:
@@ -46,6 +47,9 @@ def calculate_subject_totals():
             totals[record["subject"]] = record["minutes"]
 
     return totals
+
+if "records" not in st.session_state:
+    st.session_state["records"] = load_records()
 
 study_date = st.date_input("勉強した日")
 
