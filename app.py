@@ -75,12 +75,18 @@ def create_record_options():
 
     return options
 
+def convert_to_minutes(value, unit):
+    if unit == "hours":
+        return int(round(value * 60))
+    else:
+        return int(value)
+
 if "records" not in st.session_state:
     st.session_state["records"] = load_records()
 
 if "settings" not in st.session_state:
     st.session_state["settings"] = load_settings()
-    
+
 st.session_state["settings"].setdefault(
 "time_input_unit",
 "minutes"
@@ -103,11 +109,21 @@ with record_tab:
 
     subject = st.text_input("科目名")
 
-    minutes = st.number_input(
-        "勉強時間（分）",
-        min_value=st.session_state["settings"]["time_step"],
-        step=st.session_state["settings"]["time_step"]
-    )
+    time_input_unit = st.session_state["settings"]["time_input_unit"]
+    if time_input_unit == "hours":
+        study_time = st.number_input(
+            "勉強時間（時）",
+            min_value=st.session_state["settings"]["time_step"] / 60,
+            step=st.session_state["settings"]["time_step"] / 60
+        )
+        minutes = convert_to_minutes(study_time, time_input_unit)
+    else:
+        study_time = st.number_input(
+            "勉強時間（分）",
+            min_value=st.session_state["settings"]["time_step"],
+            step=st.session_state["settings"]["time_step"]
+        )
+        minutes = convert_to_minutes(study_time, time_input_unit)
 
     if st.button("記録する"):
         if not subject.strip():
