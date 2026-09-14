@@ -5,6 +5,24 @@ from datetime import date
 st.title("Study Architect")
 st.write("学習を記録・分析するアプリ")
 
+record_tab, view_tab, edit_tab, settings_tab = st.tabs(
+    [
+        "📝 記録",
+        "📊 閲覧",
+        "✏️ 編集・削除",
+        "⚙️ 設定"
+    ]
+)
+
+with record_tab:
+    st.write("記録")
+with view_tab:
+    st.write("閲覧")
+with edit_tab:
+    st.write("編集")
+with settings_tab:
+    st.write("設定")
+
 def load_records():
     try:
         with open("data/records.json", "r", encoding="utf-8") as f:
