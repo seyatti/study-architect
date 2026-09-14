@@ -5,9 +5,6 @@ from datetime import date
 st.title("Study Architect")
 st.write("学習を記録・分析するアプリ")
 
-delete_options = []
-edit_options = []
-
 def load_records():
     try:
         with open("data/records.json", "r", encoding="utf-8") as f:
@@ -48,6 +45,19 @@ def calculate_subject_totals():
 
     return totals
 
+def create_record_options():
+    options = []
+
+    for index, record in enumerate(st.session_state["records"]):
+        options.append(
+            (
+                index,
+                f"{record['date']} : {record['subject']} : {record['minutes']}"
+            )
+        )
+
+    return options
+
 if "records" not in st.session_state:
     st.session_state["records"] = load_records()
 
@@ -84,13 +94,7 @@ if st.button("記録の確認"):
         st.write(f"{key}: {value}分")
     st.bar_chart(subject_totals)
 
-for index, record in enumerate(st.session_state["records"]):
-    delete_options.append(
-        (
-            index,
-            f"{record['date']} : {record['subject']} : {record['minutes']}"
-        )
-    )
+delete_options = create_record_options()
 
 if st.session_state["records"]:
     selected = st.selectbox(
@@ -110,13 +114,7 @@ if st.session_state["records"]:
 else:
     st.write("削除できる記録がありません")
 
-for index, record in enumerate(st.session_state["records"]):
-    edit_options.append(
-        (
-            index,
-            f"{record["date"]} : {record["subject"]} : {record["minutes"]}"
-        )
-    )
+edit_options = create_record_options()
 
 if st.session_state["records"]:
     edit_selected = st.selectbox(
