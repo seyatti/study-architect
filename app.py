@@ -49,7 +49,11 @@ def update_edit_fields():
         edit_record["date"]
     )
     st.session_state["edit_subject"] = edit_record["subject"]
-    st.session_state["edit_minutes"] = edit_record["minutes"]
+    time_input_unit = st.session_state["settings"]["time_input_unit"]
+    if time_input_unit == "hours":
+        st.session_state["edit_study_time"] = edit_record["minutes"] / 60
+    else:
+        st.session_state["edit_study_time"] = edit_record["minutes"]
 
 def calculate_subject_totals():
     totals = {}
@@ -182,25 +186,45 @@ with edit_tab:
         edit_number = edit_selected[0]
         edit_record = st.session_state["records"][edit_number]
 
+        if "edit_date" not in st.session_state:
+            st.session_state["edit_date"] = date.fromisoformat(edit_record["date"])
+
+        if "edit_subject" not in st.session_state:
+            st.session_state["edit_subject"] = edit_record["subject"]
+
+        if "edit_study_time" not in st.session_state:
+            if time_input_unit == "hours":
+                st.session_state["edit_study_time"] = edit_record["minutes"] / 60
+            else:
+                st.session_state["edit_study_time"] = edit_record["minutes"]
+
         edit_study_date = st.date_input(
             "編集後の日付",
-            value=date.fromisoformat(edit_record["date"]),
             key="edit_date"
         )
 
         edit_subject = st.text_input(
             "編集後の科目名",
-            value=edit_record["subject"],
             key="edit_subject"
         )
 
-        edit_minutes = st.number_input(
-            "編集後の勉強時間（分）",
-            min_value=1,
-            step=st.session_state["settings"]["time_step"],
-            value=edit_record["minutes"],
-            key="edit_minutes"
-        )
+        time_input_unit = st.session_state["settings"]["time_input_unit"]
+        if time_input_unit == "hours":
+            edit_study_time = st.number_input(
+                "編集後の勉強時間（時）",
+                min_value=st.session_state["settings"]["time_step"] / 60,
+                step=st.session_state["settings"]["time_step"] / 60,
+                key="edit_study_time"
+            )
+        else:
+            edit_study_time = st.number_input(
+                "編集後の勉強時間（分）",
+                min_value=st.session_state["settings"]["time_step"],
+                step=st.session_state["settings"]["time_step"],
+                key="edit_study_time"
+            )
+
+        edit_minutes = convert_to_minutes(edit_study_time, time_input_unit)
         if st.button("更新する"):
             if not edit_subject.strip():
                 st.warning("科目名を入力してください")
