@@ -17,7 +17,8 @@ def load_settings():
 
     except FileNotFoundError:
         return {
-            "time_step": 1
+            "time_step": 1,
+            "time_input_unit": "minutes"
         }
 
 def save_records():
@@ -79,6 +80,11 @@ if "records" not in st.session_state:
 
 if "settings" not in st.session_state:
     st.session_state["settings"] = load_settings()
+    
+st.session_state["settings"].setdefault(
+"time_input_unit",
+"minutes"
+)
 
 st.title("Study Architect")
 st.write("学習を記録・分析するアプリ")
@@ -191,6 +197,7 @@ with edit_tab:
 
 with settings_tab:
     time_step_options = [1, 5, 10, 15, 30, 60]
+    time_unit_options = ["minutes", "hours"]
 
     time_step = st.selectbox(
         "勉強時間の入力間隔",
@@ -200,7 +207,17 @@ with settings_tab:
             )
     )
 
+    time_input_unit = st.selectbox(
+        "勉強時間の入力単位",
+        time_unit_options,
+        index=time_unit_options.index(
+            st.session_state["settings"]["time_input_unit"]
+            ),
+        format_func=lambda unit: "分" if unit == "minutes" else "時間"
+    )
+
     if st.button("設定を保存"):
         st.session_state["settings"]["time_step"] = time_step
+        st.session_state["settings"]["time_input_unit"] = time_input_unit
         save_settings()
         st.success("設定を保存しました")
