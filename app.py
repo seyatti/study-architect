@@ -12,7 +12,6 @@ if "records" not in st.session_state:
 
     except FileNotFoundError:
         st.session_state["records"] = []
-subject_totals = {}
 delete_options = []
 edit_options = []
 
@@ -36,6 +35,17 @@ def update_edit_fields():
     )
     st.session_state["edit_subject"] = edit_record["subject"]
     st.session_state["edit_minutes"] = edit_record["minutes"]
+
+def calculate_subject_totals():
+    totals = {}
+
+    for record in st.session_state["records"]:
+        if record["subject"] in totals:
+            totals[record["subject"]] += record["minutes"]
+        else:
+            totals[record["subject"]] = record["minutes"]
+
+    return totals
 
 study_date = st.date_input("勉強した日")
 
@@ -65,11 +75,7 @@ if st.button("記録する"):
 if st.button("記録の確認"):
     for record in st.session_state["records"]:
         st.write(f"{record["date"]}:{record["subject"]}を{record["minutes"]}分勉強しました")
-    for record in st.session_state["records"]:
-        if record["subject"] in subject_totals:
-            subject_totals[record["subject"]] += record["minutes"]
-        else:
-            subject_totals[record["subject"]] = record["minutes"]
+    subject_totals = calculate_subject_totals()
     for key, value in subject_totals.items():
         st.write(f"{key}: {value}分")
     st.bar_chart(subject_totals)
