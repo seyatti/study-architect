@@ -10,6 +10,16 @@ def load_records():
     except FileNotFoundError:
         return []  
 
+def load_settings():
+    try:
+        with open("data/settings.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    except FileNotFoundError:
+        return {
+            "time_step": 1
+        }
+
 def save_records():
     with open("data/records.json", "w", encoding="utf-8") as f:
        json.dump(
@@ -18,6 +28,15 @@ def save_records():
            ensure_ascii=False,
            indent=2
        )
+
+def save_settings():
+    with open("data/settings.json", "w", encoding="utf-8") as f:
+        json.dump(
+            st.session_state["settings"],
+            f,
+            ensure_ascii=False,
+            indent=2
+        )
 
 def update_edit_fields():
     selected = st.session_state["edit_record"]
@@ -57,6 +76,9 @@ def create_record_options():
 
 if "records" not in st.session_state:
     st.session_state["records"] = load_records()
+
+if "settings" not in st.session_state:
+    st.session_state["settings"] = load_settings()
 
 st.title("Study Architect")
 st.write("学習を記録・分析するアプリ")
