@@ -99,8 +99,8 @@ with record_tab:
 
     minutes = st.number_input(
         "勉強時間（分）",
-        min_value=1,
-        step=1
+        min_value=st.session_state["settings"]["time_step"],
+        step=st.session_state["settings"]["time_step"]
     )
 
     if st.button("記録する"):
@@ -175,7 +175,7 @@ with edit_tab:
         edit_minutes = st.number_input(
             "編集後の勉強時間（分）",
             min_value=1,
-            step=1,
+            step=st.session_state["settings"]["time_step"],
             value=edit_record["minutes"],
             key="edit_minutes"
         )
@@ -190,4 +190,17 @@ with edit_tab:
                 st.success("記録を編集しました")
 
 with settings_tab:
-    st.write("設定")
+    time_step_options = [1, 5, 10, 15, 30, 60]
+
+    time_step = st.selectbox(
+        "勉強時間の入力間隔",
+        time_step_options,
+        index=time_step_options.index(
+            st.session_state["settings"]["time_step"]
+            )
+    )
+
+    if st.button("設定を保存"):
+        st.session_state["settings"]["time_step"] = time_step
+        save_settings()
+        st.success("設定を保存しました")
