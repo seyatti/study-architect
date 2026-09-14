@@ -186,6 +186,11 @@ with edit_tab:
         edit_number = edit_selected[0]
         edit_record = st.session_state["records"][edit_number]
 
+        time_input_unit = st.session_state["settings"]["time_input_unit"]
+
+        if st.session_state.pop("reset_edit_study_time", False):
+            st.session_state.pop("edit_study_time", None)
+
         if "edit_date" not in st.session_state:
             st.session_state["edit_date"] = date.fromisoformat(edit_record["date"])
 
@@ -208,7 +213,6 @@ with edit_tab:
             key="edit_subject"
         )
 
-        time_input_unit = st.session_state["settings"]["time_input_unit"]
         if time_input_unit == "hours":
             edit_study_time = st.number_input(
                 "編集後の勉強時間（時）",
@@ -257,7 +261,13 @@ with settings_tab:
     )
 
     if st.button("設定を保存"):
+        old_unit = st.session_state["settings"]["time_input_unit"]
+
         st.session_state["settings"]["time_step"] = time_step
         st.session_state["settings"]["time_input_unit"] = time_input_unit
+
+        if old_unit != time_input_unit:
+                st.session_state["reset_edit_study_time"] = True
+
         save_settings()
-        st.success("設定を保存しました")
+        st.rerun()
