@@ -79,6 +79,14 @@ def create_record_options():
 
     return options
 
+def get_subject_options():
+    subjects = set()
+
+    for record in st.session_state["records"]:
+        subjects.add(record["subject"])
+
+    return sorted(subjects)
+
 def convert_to_minutes(value, unit):
     if unit == "hours":
         return int(round(value * 60))
@@ -111,7 +119,19 @@ record_tab, view_tab, edit_tab, settings_tab = st.tabs(
 with record_tab:
     study_date = st.date_input("勉強した日")
 
-    subject = st.text_input("科目名")
+    subject_options = get_subject_options()
+    subject_choices = ["新しい科目"] + subject_options
+    selected_subject = st.selectbox(
+        "科目を選択",
+        subject_choices
+    )
+
+    if selected_subject == "新しい科目":
+        subject = st.text_input(
+            "科目名を入力"
+        )
+    else:
+        subject = selected_subject
 
     time_input_unit = st.session_state["settings"]["time_input_unit"]
     if time_input_unit == "hours":
