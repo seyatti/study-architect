@@ -1,8 +1,8 @@
 import streamlit as st
 from datetime import date
-import unicodedata
 from analytics import filtered_records_by_period, calculate_subject_totals
 from storage import load_records, load_settings, save_records, save_settings
+from subjects import get_subject_options, find_existing_subject
 
 def update_edit_fields():
     selected = st.session_state["edit_record"]
@@ -33,32 +33,11 @@ def create_record_options():
 
     return options
 
-def get_subject_options():
-    subjects = set()
-
-    for record in st.session_state["records"]:
-        subjects.add(record["subject"])
-
-    return sorted(subjects)
-
-def find_existing_subject(subject):
-    normalized_subject = normalize_subject(subject)
-
-    for existing_subject in get_subject_options():
-        if normalize_subject(existing_subject) == normalized_subject:
-            return existing_subject
-
-    return subject
-
 def convert_to_minutes(value, unit):
     if unit == "hours":
         return int(round(value * 60))
     else:
         return int(value)
-
-def normalize_subject(subject):
-     subject = unicodedata.normalize("NFKC", subject)
-     return subject.strip().casefold()
 
 if "records" not in st.session_state:
     st.session_state["records"] = load_records()
@@ -86,7 +65,7 @@ record_tab, view_tab, edit_tab, settings_tab = st.tabs(
 with record_tab:
     study_date = st.date_input("勉強した日")
 
-    subject_options = get_subject_options()
+    subject_options = get_subject_options(st.session_state["records"])
     subject_choices = ["新しい科目"] + subject_options
     selected_subject = st.selectbox(
         "科目を選択",
@@ -123,7 +102,7 @@ with record_tab:
             st.session_state["records"].append(
                 {   
                     "date":study_date.isoformat(),
-                    "subject": find_existing_subject(subject.strip()),
+                    "subject": find_existing_subject(subject.strip(), st.session_state["records"]),
                     "minutes":minutes
                 }
             )
@@ -238,7 +217,7 @@ with edit_tab:
                 st.warning("科目名を入力してください")
             else:
                 st.session_state["records"][edit_number]["date"] = edit_study_date.isoformat()
-                st.session_state["records"][edit_number]["subject"] = find_existing_subject(edit_subject.strip())
+                st.session_state["records"][edit_number]["subject"] = find_existing_subject(edit_subject.strip(), st.session_state["records"])
                 st.session_state["records"][edit_number]["minutes"] = edit_minutes
                 save_records(st.session_state["records"])
                 st.success("記録を編集しました")

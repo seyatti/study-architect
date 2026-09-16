@@ -28,10 +28,10 @@ def save_records(records):
            indent=2
        )
 
-def save_settings(records):
+def save_settings(settings):
     with open("data/settings.json", "w", encoding="utf-8") as f:
         json.dump(
-            records,
+            settings,
             f,
             ensure_ascii=False,
             indent=2
