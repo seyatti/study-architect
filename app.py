@@ -166,13 +166,15 @@ with view_tab:
             f"{calculate_study_streak(st.session_state["records"])}日"
         )
 
+    subject_totals = calculate_subject_totals(filtered_records)
+
+    st.bar_chart(subject_totals)
+    
     if st.button("記録の確認"):
         for record in filtered_records:
             st.write(f"{record["date"]}:{record["subject"]}を{record["minutes"]}分勉強しました")
-        subject_totals = calculate_subject_totals(filtered_records)
         for key, value in subject_totals.items():
             st.write(f"{key}: {value}分")
-        st.bar_chart(subject_totals)
 
 
 
