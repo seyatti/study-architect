@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import date
-from analytics import filtered_records_by_period, calculate_subject_totals,calculate_total_minutes,format_minutes,calculate_daily_average,calculate_top_subject
+from analytics import filtered_records_by_period, calculate_subject_totals,calculate_total_minutes,format_minutes,calculate_daily_average,calculate_top_subject,calculate_study_streak
 from storage import load_records, load_settings, save_records, save_settings
 from subjects import get_subject_options, find_existing_subject
 
@@ -138,7 +138,7 @@ with view_tab:
     average_minutes = calculate_daily_average(filtered_records,selected_period)
     formatted_average = format_minutes(average_minutes)
 
-    col1, col2, col3= st.columns(3)
+    col1, col2 = st.columns(2)
 
     with col1:
         st.metric(
@@ -152,10 +152,18 @@ with view_tab:
             formatted_average
         )
 
+    col3, col4 = st.columns(2)
+
     with col3:
         st.metric(
             "最も勉強した科目",
             calculate_top_subject(filtered_records)
+        )
+
+    with col4:
+        st.metric(
+            "連続勉強日数",
+            f"{calculate_study_streak(st.session_state["records"])}日"
         )
 
     if st.button("記録の確認"):

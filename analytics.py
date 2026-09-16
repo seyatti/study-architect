@@ -66,6 +66,21 @@ def calculate_top_subject(records):
 
     return top_subject
 
+def calculate_study_streak(records):
+    study_dates = set()
+
+    for record in records:
+        study_dates.add(date.fromisoformat(record["date"]))
+
+    streak = 0
+    current_date = date.today()
+
+    while current_date in study_dates:
+        streak += 1
+        current_date = current_date - timedelta(days=1)
+
+    return streak
+
 def filtered_records_by_period(records, period):
     filtered_records = []
     today = date.today()
