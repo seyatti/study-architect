@@ -169,13 +169,10 @@ with view_tab:
     subject_totals = calculate_subject_totals(filtered_records)
 
     st.bar_chart(subject_totals)
-    
-    if st.button("記録の確認"):
+
+    with st.expander("記録一覧"):
         for record in filtered_records:
             st.write(f"{record["date"]}:{record["subject"]}を{record["minutes"]}分勉強しました")
-        for key, value in subject_totals.items():
-            st.write(f"{key}: {value}分")
-
 
 
 
