@@ -1,6 +1,6 @@
 import streamlit as st
 import json
-from datetime import date
+from datetime import date, timedelta
 import unicodedata
 
 def load_records():
@@ -56,16 +56,37 @@ def update_edit_fields():
     else:
         st.session_state["edit_study_time"] = edit_record["minutes"]
 
-def calculate_subject_totals():
+def calculate_subject_totals(records):
     totals = {}
 
-    for record in st.session_state["records"]:
+    for record in records:
         if record["subject"] in totals:
             totals[record["subject"]] += record["minutes"]
         else:
             totals[record["subject"]] = record["minutes"]
 
     return totals
+
+def filtered_records_by_period(period):
+    filtered_records = []
+    today = date.today()
+
+    for record in st.session_state["records"]:
+        record_date = date.fromisoformat(record["date"])
+
+        if period == "1週間":
+            if record_date >= today - timedelta(days=6):
+                filtered_records.append(record)
+        elif period == "1か月":
+            if record_date >= today - timedelta(days=29):
+                filtered_records.append(record)
+        elif period == "1年":
+            if record_date >= today - timedelta(days=364):
+                filtered_records.append(record)
+        else:
+            filtered_records.append(record)
+
+    return filtered_records
 
 def create_record_options():
     options = []
@@ -178,10 +199,24 @@ with record_tab:
             st.success("記録が完了しました")
 
 with view_tab:
+    period_options = [
+        "1週間",
+        "1か月",
+        "1年",
+        "全期間"
+    ]
+
+    selected_period = st.selectbox(
+        "表示期間",
+        period_options
+    )
+
+    filtered_records = filtered_records_by_period(selected_period)
+
     if st.button("記録の確認"):
-        for record in st.session_state["records"]:
+        for record in filtered_records:
             st.write(f"{record["date"]}:{record["subject"]}を{record["minutes"]}分勉強しました")
-        subject_totals = calculate_subject_totals()
+        subject_totals = calculate_subject_totals(filtered_records)
         for key, value in subject_totals.items():
             st.write(f"{key}: {value}分")
         st.bar_chart(subject_totals)
