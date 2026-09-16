@@ -1,45 +1,8 @@
 import streamlit as st
-import json
 from datetime import date
 import unicodedata
 from analytics import filtered_records_by_period, calculate_subject_totals
-
-def load_records():
-    try:
-        with open("data/records.json", "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    except FileNotFoundError:
-        return []  
-
-def load_settings():
-    try:
-        with open("data/settings.json", "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    except FileNotFoundError:
-        return {
-            "time_step": 1,
-            "time_input_unit": "minutes"
-        }
-
-def save_records():
-    with open("data/records.json", "w", encoding="utf-8") as f:
-       json.dump(
-           st.session_state["records"],
-           f,
-           ensure_ascii=False,
-           indent=2
-       )
-
-def save_settings():
-    with open("data/settings.json", "w", encoding="utf-8") as f:
-        json.dump(
-            st.session_state["settings"],
-            f,
-            ensure_ascii=False,
-            indent=2
-        )
+from storage import load_records, load_settings, save_records, save_settings
 
 def update_edit_fields():
     selected = st.session_state["edit_record"]
@@ -164,7 +127,7 @@ with record_tab:
                     "minutes":minutes
                 }
             )
-            save_records()
+            save_records(st.session_state["records"])
             st.success("記録が完了しました")
 
 with view_tab:
@@ -209,7 +172,7 @@ with edit_tab:
             st.session_state["records"].pop(
                 delete_number
             )
-            save_records()
+            save_records(st.session_state["records"])
             st.success("記録を削除しました")
     else:
         st.write("削除できる記録がありません")
@@ -277,7 +240,7 @@ with edit_tab:
                 st.session_state["records"][edit_number]["date"] = edit_study_date.isoformat()
                 st.session_state["records"][edit_number]["subject"] = find_existing_subject(edit_subject.strip())
                 st.session_state["records"][edit_number]["minutes"] = edit_minutes
-                save_records()
+                save_records(st.session_state["records"])
                 st.success("記録を編集しました")
 
 with settings_tab:
@@ -310,5 +273,5 @@ with settings_tab:
         if old_unit != time_input_unit:
                 st.session_state["reset_edit_study_time"] = True
 
-        save_settings()
+        save_settings(st.session_state["settings"])
         st.rerun()
