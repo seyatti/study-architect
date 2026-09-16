@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import date
-from analytics import filtered_records_by_period, calculate_subject_totals
+from analytics import filtered_records_by_period, calculate_subject_totals,calculate_total_minutes,format_minutes,calculate_daily_average
 from storage import load_records, load_settings, save_records, save_settings
 from subjects import get_subject_options, find_existing_subject
 
@@ -50,6 +50,8 @@ st.session_state["settings"].setdefault(
 "minutes"
 )
 
+
+
 st.title("Study Architect")
 st.write("学習を記録・分析するアプリ")
 
@@ -61,6 +63,8 @@ record_tab, view_tab, edit_tab, settings_tab = st.tabs(
         "⚙️ 設定"
     ]
 )
+
+
 
 with record_tab:
     study_date = st.date_input("勉強した日")
@@ -109,6 +113,8 @@ with record_tab:
             save_records(st.session_state["records"])
             st.success("記録が完了しました")
 
+
+
 with view_tab:
     period_options = [
         "1週間",
@@ -127,6 +133,25 @@ with view_tab:
         selected_period
         )
 
+    total_minutes = calculate_total_minutes(filtered_records)
+    formatted_total = format_minutes(total_minutes)
+    average_minutes = calculate_daily_average(filtered_records,selected_period)
+    formatted_average = format_minutes(average_minutes)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric(
+        "総勉強時間",
+        formatted_total
+        )
+
+    with col2:
+        st.metric(
+            "1日の平均勉強時間",
+            formatted_average
+        )
+
     if st.button("記録の確認"):
         for record in filtered_records:
             st.write(f"{record["date"]}:{record["subject"]}を{record["minutes"]}分勉強しました")
@@ -134,6 +159,9 @@ with view_tab:
         for key, value in subject_totals.items():
             st.write(f"{key}: {value}分")
         st.bar_chart(subject_totals)
+
+
+
 
 with edit_tab:
     delete_options = create_record_options()
@@ -221,6 +249,9 @@ with edit_tab:
                 st.session_state["records"][edit_number]["minutes"] = edit_minutes
                 save_records(st.session_state["records"])
                 st.success("記録を編集しました")
+
+
+
 
 with settings_tab:
     time_step_options = [1, 5, 10, 15, 30, 60]

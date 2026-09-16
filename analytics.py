@@ -11,6 +11,51 @@ def calculate_subject_totals(records):
 
     return totals
 
+def calculate_total_minutes(records):
+    total = 0
+    for record in records:
+        total += record["minutes"]
+
+    return total
+
+def format_minutes(total_minutes):
+
+    result = ""
+
+    hours = total_minutes // 60
+    minutes = total_minutes % 60
+    
+    if hours > 0 and minutes > 0:
+        result = f"{hours}時間{minutes}分"
+    elif hours > 0 and minutes == 0:
+        result = f"{hours}時間"
+    elif hours == 0:
+        result = f"{minutes}分"
+
+    return result
+
+def calculate_daily_average(records, period):
+    if not records:
+        return 0
+
+    total_minutes = calculate_total_minutes(records)
+    
+    if period == "1週間":
+        days = 7
+    elif period == "1か月":
+        days = 30
+    elif period == "1年":
+        days = 365
+    else:
+        dates = [
+            date.fromisoformat(record["date"])
+            for record in records
+            ]
+        first_date = min(dates)
+        days = (date.today() - first_date).days + 1
+
+    return round(total_minutes / days)
+
 def filtered_records_by_period(records, period):
     filtered_records = []
     today = date.today()
