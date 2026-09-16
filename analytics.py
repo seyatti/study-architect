@@ -56,6 +56,16 @@ def calculate_daily_average(records, period):
 
     return round(total_minutes / days)
 
+def calculate_top_subject(records):
+    if not records:
+        return "記録なし"
+
+    subject_totals = calculate_subject_totals(records)
+
+    top_subject = max(subject_totals, key=subject_totals.get)
+
+    return top_subject
+
 def filtered_records_by_period(records, period):
     filtered_records = []
     today = date.today()
