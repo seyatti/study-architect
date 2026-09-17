@@ -11,6 +11,57 @@ def calculate_subject_totals(records):
 
     return totals
 
+def calculate_daily_totals(records):
+    totals = {}
+
+    for record in records:
+        if record["date"] in totals:
+            totals[record["date"]] += record["minutes"]
+        else:
+            totals[record["date"]] = record["minutes"]
+
+    return totals
+
+def fill_missing_dates(daily_totals, period):
+    completed_totals = {}
+
+    if period == "1週間":
+        today = date.today()
+
+        for i in range(7):
+            current_date = today - timedelta(days=6 - i)
+            date_key = current_date.isoformat()
+            completed_totals[date_key] = daily_totals.get(date_key, 0)
+    elif period == "1か月":
+        today = date.today()
+
+        for i in range(30):
+            current_date = today - timedelta(days=29 - i)
+            date_key = current_date.isoformat()
+            completed_totals[date_key] = daily_totals.get(date_key, 0)
+    elif period == "1年":
+        today = date.today()
+
+        for i in range(365):
+            current_date = today - timedelta(days=364 - i)
+            date_key = current_date.isoformat()
+            completed_totals[date_key] = daily_totals.get(date_key, 0)
+    elif period == "全期間":
+        if not daily_totals:
+            return completed_totals
+        today = date.today()
+        old_day = date.fromisoformat(min(daily_totals))
+        difference_days = (today - old_day).days + 1
+
+        for i in range(difference_days):
+            current_date = today - timedelta(days=(difference_days - 1) - i)
+            date_key = current_date.isoformat()
+            completed_totals[date_key] = daily_totals.get(date_key, 0)
+
+    return completed_totals
+
+        
+
 def calculate_total_minutes(records):
     total = 0
     for record in records:

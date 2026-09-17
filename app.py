@@ -1,6 +1,15 @@
 import streamlit as st
 from datetime import date
-from analytics import filtered_records_by_period, calculate_subject_totals,calculate_total_minutes,format_minutes,calculate_daily_average,calculate_top_subject,calculate_study_streak
+from analytics import (
+    filtered_records_by_period,
+    calculate_subject_totals,
+    calculate_total_minutes,
+    format_minutes,calculate_daily_average,
+    calculate_top_subject,
+    calculate_study_streak,
+    calculate_daily_totals,
+    fill_missing_dates
+    )
 from storage import load_records, load_settings, save_records, save_settings
 from subjects import get_subject_options, find_existing_subject
 
@@ -137,6 +146,10 @@ with view_tab:
     formatted_total = format_minutes(total_minutes)
     average_minutes = calculate_daily_average(filtered_records,selected_period)
     formatted_average = format_minutes(average_minutes)
+    daily_totals = calculate_daily_totals(filtered_records)
+    completed_totals = fill_missing_dates(daily_totals, selected_period)
+
+    st.line_chart(completed_totals)
 
     col1, col2 = st.columns(2)
 
