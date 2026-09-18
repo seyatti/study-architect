@@ -8,7 +8,9 @@ from analytics import (
     calculate_top_subject,
     calculate_study_streak,
     calculate_daily_totals,
-    fill_missing_dates
+    fill_missing_dates,
+    filtered_previous_records_by_period,
+    format_difference_minutes
     )
 from storage import load_records, load_settings, save_records, save_settings
 from subjects import get_subject_options, find_existing_subject
@@ -148,16 +150,27 @@ with view_tab:
     formatted_average = format_minutes(average_minutes)
     daily_totals = calculate_daily_totals(filtered_records)
     completed_totals = fill_missing_dates(daily_totals, selected_period)
+    previous_records = filtered_previous_records_by_period(st.session_state["records"],selected_period)
+    previous_total_minutes = calculate_total_minutes(previous_records)
+    difference_minutes = total_minutes - previous_total_minutes
+    formatted_difference = format_difference_minutes(difference_minutes)
 
     st.line_chart(completed_totals)
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.metric(
-        "総勉強時間",
-        formatted_total
-        )
+        if selected_period == "全期間":
+            st.metric(
+                "総勉強時間",
+                formatted_total
+            )
+        else:
+            st.metric(
+                "総勉強時間",
+                formatted_total,
+                delta=formatted_difference
+            )
 
     with col2:
         st.metric(

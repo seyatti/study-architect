@@ -60,7 +60,47 @@ def fill_missing_dates(daily_totals, period):
 
     return completed_totals
 
-        
+def filtered_previous_records_by_period(records, period):
+    filtered_records = []
+    today = date.today()
+
+    for record in records:
+        record_date = date.fromisoformat(record["date"])
+
+        if period == "1週間":
+            start_date = today - timedelta(days=13)
+            end_date = today - timedelta(days=7)
+
+            if start_date <= record_date <= end_date:
+                filtered_records.append(record)
+        elif period == "1か月":
+            start_date = today - timedelta(days=59)
+            end_date = today - timedelta(days=30)
+
+            if start_date <= record_date <= end_date:
+                filtered_records.append(record)
+        elif period == "1年":
+            start_date = today - timedelta(days=729)
+            end_date = today - timedelta(days=365)
+
+            if start_date <= record_date <= end_date:
+                filtered_records.append(record)
+
+    return filtered_records
+
+def format_difference_minutes(difference_minutes):
+    if difference_minutes > 0:
+        sign = "+"
+    elif difference_minutes < 0:
+        sign = "-"
+    else:
+        sign = "±"
+
+    formatted_difference = format_minutes(
+        abs(difference_minutes)
+    )
+
+    return f"{sign}{formatted_difference}"
 
 def calculate_total_minutes(records):
     total = 0
