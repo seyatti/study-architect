@@ -154,6 +154,9 @@ with view_tab:
     previous_total_minutes = calculate_total_minutes(previous_records)
     difference_minutes = total_minutes - previous_total_minutes
     formatted_difference = format_difference_minutes(difference_minutes)
+    previous_average_minutes = calculate_daily_average(previous_records, selected_period)
+    average_difference = average_minutes - previous_average_minutes
+    formatted_average_difference = format_difference_minutes(average_difference)
 
     st.line_chart(completed_totals)
 
@@ -173,10 +176,17 @@ with view_tab:
             )
 
     with col2:
-        st.metric(
-            "1日の平均勉強時間",
-            formatted_average
-        )
+        if selected_period == "全期間":
+            st.metric(
+                "1日の平均勉強時間",
+                formatted_average
+            )
+        else:
+            st.metric(
+                "1日の平均勉強時間",
+                formatted_average,
+                delta=formatted_average_difference
+            )
 
     col3, col4 = st.columns(2)
 
