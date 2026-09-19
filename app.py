@@ -163,10 +163,11 @@ with view_tab:
     col1, col2 = st.columns(2)
 
     with col1:
-        if selected_period == "全期間":
+        if selected_period == "全期間" or not previous_records:
             st.metric(
                 "総勉強時間",
-                formatted_total
+                formatted_total,
+                delta="比較データなし"
             )
         else:
             st.metric(
@@ -176,10 +177,11 @@ with view_tab:
             )
 
     with col2:
-        if selected_period == "全期間":
+        if selected_period == "全期間" or not previous_records:
             st.metric(
                 "1日の平均勉強時間",
-                formatted_average
+                formatted_average,
+                delta="比較データなし"
             )
         else:
             st.metric(
