@@ -192,3 +192,47 @@ def filtered_records_by_period(records, period):
             filtered_records.append(record)
 
     return filtered_records
+
+def create_heatmap_data(records):
+    daily_totals = calculate_daily_totals(records)
+
+    heatmap_data = []
+    today = date.today()
+    raw_start_date = today - timedelta(days=364)
+    start_date = raw_start_date - timedelta(days=raw_start_date.weekday())
+    total_days = (today - start_date).days + 1
+
+    for i in range(total_days):
+        current_date = start_date + timedelta(days=i)
+
+        date_key = current_date.isoformat()
+        minutes = daily_totals.get(date_key, 0)
+
+        level = calculate_activity_level(minutes)
+
+        weekday = current_date.weekday()
+        week = i // 7
+
+        heatmap_data.append(
+            {
+                "date": date_key,
+                "minutes": minutes,
+                "weekday": weekday,
+                "week": week,
+                "level": level
+            }
+        )
+
+    return heatmap_data
+
+def calculate_activity_level(minutes):
+    if minutes == 0:
+        return 0
+    elif 1 <= minutes <= 30:
+        return 1
+    elif 31 <= minutes <= 60:
+        return 2
+    elif 61 <= minutes <= 120:
+        return 3
+    else:
+        return 4

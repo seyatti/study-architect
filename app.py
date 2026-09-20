@@ -1,5 +1,7 @@
 import streamlit as st
 from datetime import date
+import pandas as pd
+import altair as alt
 from analytics import (
     filtered_records_by_period,
     calculate_subject_totals,
@@ -10,7 +12,8 @@ from analytics import (
     calculate_daily_totals,
     fill_missing_dates,
     filtered_previous_records_by_period,
-    format_difference_minutes
+    format_difference_minutes,
+    create_heatmap_data
     )
 from storage import load_records, load_settings, save_records, save_settings
 from subjects import get_subject_options, find_existing_subject
@@ -157,8 +160,27 @@ with view_tab:
     previous_average_minutes = calculate_daily_average(previous_records, selected_period)
     average_difference = average_minutes - previous_average_minutes
     formatted_average_difference = format_difference_minutes(average_difference)
+    heatmap_data = create_heatmap_data(st.session_state["records"])
+    heatmap_df = pd.DataFrame(heatmap_data)
+    weekday_labels = {0: "月",1: "火",2: "水",3: "木",4: "金",5: "土",6: "日"}
+    heatmap_df["weekday_name"] = heatmap_df["weekday"].map(weekday_labels)
+    month_labels = []
+    previous_month = None
 
-    st.line_chart(completed_totals)
+    for item in heatmap_data:
+        current_date = date.fromisoformat(item["date"])
+
+        if current_date.month != previous_month:
+            month_labels.append(
+                {
+                    "week": item["week"],
+                    "month": f"{current_date.month}月"
+                }
+            )
+
+            previous_month = current_date.month
+
+    month_df = pd.DataFrame(month_labels)
 
     col1, col2 = st.columns(2)
 
@@ -207,10 +229,73 @@ with view_tab:
     subject_totals = calculate_subject_totals(filtered_records)
 
     st.bar_chart(subject_totals)
+    st.line_chart(completed_totals)
+
+    heatmap_chart = alt.Chart(heatmap_df).mark_rect(
+        stroke="white",
+        strokeWidth=1
+    ).encode(
+        x=alt.X(
+            "week:O",
+            axis=alt.Axis(
+                labels=False,
+                ticks=False,
+                title=None
+            )
+            ),
+        y=alt.Y("weekday_name:O",
+                sort=["月", "火", "水", "木", "金", "土", "日"],
+                title=None
+                ),
+        color=alt.Color(
+            "level:O",
+            scale=alt.Scale(
+                domain=[0, 1, 2, 3, 4],
+                range=[
+                  "#EBEDF0",
+                  "#9BE9A8",
+                  "#40C463",
+                  "#30A14E",
+                  "#216E39"
+                ]
+            ),
+            legend=alt.Legend(
+                title="勉強レベル"
+            )
+            ),
+        tooltip=[
+            alt.Tooltip("date:N", title="日付"),
+            alt.Tooltip("minutes:Q", title="勉強時間（分）")
+        ]
+    ).properties(
+        height=120
+    )
+
+    month_chart = alt.Chart(month_df).mark_text(
+        align="left"
+    ).encode(
+        x=alt.X("week:O", axis=None),
+        text=alt.Text("month:N")
+    ).properties(
+        height=20
+    )
+
+    final_chart = alt.vconcat(
+        month_chart,
+        heatmap_chart
+    ).resolve_scale(
+        x="shared"
+    )
+
+    st.altair_chart(
+        final_chart,
+        use_container_width=True
+    )
 
     with st.expander("記録一覧"):
         for record in filtered_records:
             st.write(f"{record["date"]}:{record["subject"]}を{record["minutes"]}分勉強しました")
+
 
 
 
