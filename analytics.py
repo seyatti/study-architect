@@ -22,25 +22,28 @@ def calculate_daily_totals(records):
 
     return totals
 
-def fill_missing_dates(daily_totals, period):
+def fill_missing_dates(daily_totals, period, today=None):
     completed_totals = {}
 
     if period == "1週間":
-        today = date.today()
+        if today is None:
+            today = date.today()
 
         for i in range(7):
             current_date = today - timedelta(days=6 - i)
             date_key = current_date.isoformat()
             completed_totals[date_key] = daily_totals.get(date_key, 0)
     elif period == "1か月":
-        today = date.today()
+        if today is None:
+            today = date.today()
 
         for i in range(30):
             current_date = today - timedelta(days=29 - i)
             date_key = current_date.isoformat()
             completed_totals[date_key] = daily_totals.get(date_key, 0)
     elif period == "1年":
-        today = date.today()
+        if today is None:
+            today = date.today()
 
         for i in range(365):
             current_date = today - timedelta(days=364 - i)
@@ -49,7 +52,8 @@ def fill_missing_dates(daily_totals, period):
     elif period == "全期間":
         if not daily_totals:
             return completed_totals
-        today = date.today()
+        if today is None:
+            today = date.today()
         old_day = date.fromisoformat(min(daily_totals))
         difference_days = (today - old_day).days + 1
 
@@ -60,9 +64,10 @@ def fill_missing_dates(daily_totals, period):
 
     return completed_totals
 
-def filtered_previous_records_by_period(records, period):
+def filtered_previous_records_by_period(records, period, today=None):
     filtered_records = []
-    today = date.today()
+    if today is None:
+        today = date.today()
 
     for record in records:
         record_date = date.fromisoformat(record["date"])
@@ -125,9 +130,12 @@ def format_minutes(total_minutes):
 
     return result
 
-def calculate_daily_average(records, period):
+def calculate_daily_average(records, period, today=None):
     if not records:
         return 0
+
+    if today is None:
+        today = date.today()
 
     total_minutes = calculate_total_minutes(records)
     
@@ -143,7 +151,7 @@ def calculate_daily_average(records, period):
             for record in records
             ]
         first_date = min(dates)
-        days = (date.today() - first_date).days + 1
+        days = (today - first_date).days + 1
 
     return round(total_minutes / days)
 
@@ -157,14 +165,17 @@ def calculate_top_subject(records):
 
     return top_subject
 
-def calculate_study_streak(records):
+def calculate_study_streak(records, today=None):
     study_dates = set()
 
     for record in records:
         study_dates.add(date.fromisoformat(record["date"]))
 
     streak = 0
-    current_date = date.today()
+    if today is None:
+        current_date = date.today()
+    else:
+        current_date = today
 
     while current_date in study_dates:
         streak += 1
@@ -172,9 +183,10 @@ def calculate_study_streak(records):
 
     return streak
 
-def filtered_records_by_period(records, period):
+def filtered_records_by_period(records, period, today=None):
+    if today is None:
+        today = date.today()
     filtered_records = []
-    today = date.today()
 
     for record in records:
         record_date = date.fromisoformat(record["date"])
@@ -193,11 +205,12 @@ def filtered_records_by_period(records, period):
 
     return filtered_records
 
-def create_heatmap_data(records):
+def create_heatmap_data(records, today=None):
     daily_totals = calculate_daily_totals(records)
 
     heatmap_data = []
-    today = date.today()
+    if today is None:
+        today = date.today()
     raw_start_date = today - timedelta(days=364)
     start_date = raw_start_date - timedelta(days=raw_start_date.weekday())
     total_days = (today - start_date).days + 1
