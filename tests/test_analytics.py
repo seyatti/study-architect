@@ -11,7 +11,7 @@ from analytics import (
     calculate_daily_totals,
     fill_missing_dates,
     calculate_activity_level,
-    create_heatmap_data
+    create_heatmap_data,
 )
 
 import pytest
@@ -892,3 +892,34 @@ def test_calculate_activity_level(minutes, expected):
     result = calculate_activity_level(minutes)
 
     assert result == expected
+
+def test_create_heatmap_data():
+    records = [
+        {
+            "date": "2026-09-24",
+            "subject": "Python",
+            "minutes": 90
+        },
+        {
+            "date": "2026-09-23",
+            "subject": "英語",
+            "minutes": 30
+        }
+    ]
+
+    result = create_heatmap_data(
+                records,
+                today=date(2026, 9, 24)
+            )
+
+    assert result[0]["date"] == "2025-09-22"
+    assert result[-1]["date"] == "2026-09-24"
+    assert len(result) == 368
+
+    assert result[-2]["date"] == "2026-09-23"
+    assert result[-2]["minutes"] == 30
+    assert result[-2]["level"] == 1
+
+    assert result[-1]["date"] == "2026-09-24"
+    assert result[-1]["minutes"] == 90
+    assert result[-1]["level"] == 3
