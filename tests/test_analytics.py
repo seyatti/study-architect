@@ -11,7 +11,7 @@ from analytics import (
     calculate_daily_totals,
     fill_missing_dates,
     calculate_activity_level,
-    create_heatmap_data,
+    create_heatmap_data
 )
 
 import pytest
@@ -923,3 +923,9 @@ def test_create_heatmap_data():
     assert result[-1]["date"] == "2026-09-24"
     assert result[-1]["minutes"] == 90
     assert result[-1]["level"] == 3
+
+    assert result[-2]["weekday"] == 2
+    assert result[-2]["week"] == 52
+
+    assert result[-1]["weekday"] == 3
+    assert result[-1]["week"] == 52
