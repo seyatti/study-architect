@@ -3,7 +3,7 @@ import sqlite3
 def initialize_database(db_path="data/study_architect.db"):
     connection = sqlite3.connect(db_path)
 
-    sql = """
+    records_sql = """
     CREATE TABLE IF NOT EXISTS records (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT NOT NULL,
@@ -12,7 +12,15 @@ def initialize_database(db_path="data/study_architect.db"):
     )
     """
 
-    connection.execute(sql)
+    settings_sql = """
+    CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL  
+    )
+    """
+
+    connection.execute(records_sql)
+    connection.execute(settings_sql)
 
     connection.commit()
     connection.close()
@@ -100,3 +108,52 @@ def delete_record(
 
     connection.commit()
     connection.close()
+
+def save_setting(
+        key,
+        value,
+        db_path="data/study_architect.db"
+):
+    connection = sqlite3.connect(db_path)
+
+    sql = """
+    INSERT INTO settings (key, value)
+    VALUES (?, ?)
+    ON CONFLICT(key)
+    DO UPDATE SET value = excluded.value
+    """
+
+    connection.execute(
+        sql,
+        (key, str(value))
+    )
+    connection.commit()
+    connection.close()
+
+def get_settings(db_path="data/study_architect.db"):
+
+    connection = sqlite3.connect(db_path)
+
+    settings = {
+        "time_step": 1,
+        "time_input_unit": "minutes"
+    }
+
+    sql = """
+    SELECT key, value
+    FROM settings
+    """
+
+    rows = connection.execute(
+        sql
+    ).fetchall()
+
+    for key, value in rows:
+        if key == "time_step":
+            settings[key] = int(value)
+        else:
+            settings[key] = value
+
+    connection.close()
+
+    return settings

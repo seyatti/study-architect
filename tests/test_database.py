@@ -1,4 +1,12 @@
-from database import initialize_database, add_record, get_records, update_record, delete_record
+from database import (
+    initialize_database,
+    add_record,
+    get_records,
+    update_record,
+    delete_record,
+    save_setting,
+    get_settings
+)
 import sqlite3
 
 def test_initialize_database(tmp_path):
@@ -153,3 +161,78 @@ def test_delete_record(tmp_path):
     ]
 
     assert result == records
+
+def test_initialize_database_creates_settings_table(tmp_path):
+    db_path = tmp_path / "test.db"
+
+    initialize_database(db_path)
+
+    assert db_path.exists()
+
+    connection = sqlite3.connect(db_path)
+
+    sql = """
+    SELECT name
+    FROM sqlite_master
+    WHERE type="table" AND name="settings"
+    """
+
+    result = connection.execute(sql).fetchone()
+
+    assert result == ("settings",)
+
+def test_save_setting(tmp_path):
+    db_path = tmp_path / "test.db"
+
+    initialize_database(db_path)
+
+    save_setting("time_step", 1, db_path)
+    save_setting("time_step", 5, db_path)
+
+    connection = sqlite3.connect(db_path)
+
+    sql = """
+    SELECT value
+    FROM settings
+    WHERE key = ?
+    """
+
+    result = connection.execute(
+        sql,
+        ("time_step",)
+    ).fetchone()
+
+    assert result == ("5",)
+
+    connection.close()
+
+def test_get_settings(tmp_path):
+    db_path = tmp_path / "test.db"
+
+    initialize_database(db_path)
+
+    save_setting("time_step", 5, db_path)
+    save_setting("time_input_unit", "hours", db_path)
+
+    result = get_settings(db_path)
+
+    settings = {
+        "time_step": 5,
+        "time_input_unit": "hours"
+    }
+
+    assert result == settings
+
+def test_get_settings_returns_defaults(tmp_path):
+    db_path = tmp_path / "test.db"
+
+    initialize_database(db_path)
+
+    result = get_settings(db_path)
+
+    settings = {
+        "time_step": 1,
+        "time_input_unit": "minutes"
+    }
+
+    assert result == settings
