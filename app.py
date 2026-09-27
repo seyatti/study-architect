@@ -20,9 +20,10 @@ from database import (
     add_record,
     get_records,
     update_record,
-    delete_record
+    delete_record,
+    get_settings,
+    save_setting
 )
-from storage import load_records, load_settings, save_records, save_settings
 from subjects import get_subject_options, find_existing_subject
 
 initialize_database()
@@ -69,7 +70,7 @@ if "records" not in st.session_state:
     st.session_state["records"] = get_records()
 
 if "settings" not in st.session_state:
-    st.session_state["settings"] = load_settings()
+    st.session_state["settings"] = get_settings()
 
 st.session_state["settings"].setdefault(
 "time_input_unit",
@@ -442,5 +443,12 @@ with settings_tab:
         if old_unit != time_input_unit:
                 st.session_state["reset_edit_study_time"] = True
 
-        save_settings(st.session_state["settings"])
+        save_setting(
+            "time_step",
+            st.session_state["settings"]["time_step"]
+        )
+        save_setting(
+            "time_input_unit",
+            st.session_state["settings"]["time_input_unit"]
+        )
         st.rerun()
