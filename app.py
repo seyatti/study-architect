@@ -15,14 +15,26 @@ from analytics import (
     format_difference_minutes,
     create_heatmap_data
     )
+from database import (
+    initialize_database,
+    add_record,
+    get_records,
+    update_record,
+    delete_record
+)
 from storage import load_records, load_settings, save_records, save_settings
 from subjects import get_subject_options, find_existing_subject
 
+initialize_database()
+
 def update_edit_fields():
     selected = st.session_state["edit_record"]
+    selected_id = selected[0]
 
-    edit_number = selected[0]
-    edit_record = st.session_state["records"][edit_number]
+    for record in st.session_state["records"]:
+        if record["id"] == selected_id:
+            edit_record = record
+            break
 
     st.session_state["edit_date"] = date.fromisoformat(
         edit_record["date"]
@@ -37,10 +49,10 @@ def update_edit_fields():
 def create_record_options():
     options = []
 
-    for index, record in enumerate(st.session_state["records"]):
+    for record in st.session_state["records"]:
         options.append(
             (
-                index,
+                record["id"],
                 f"{record['date']} : {record['subject']} : {record['minutes']}"
             )
         )
@@ -54,7 +66,7 @@ def convert_to_minutes(value, unit):
         return int(value)
 
 if "records" not in st.session_state:
-    st.session_state["records"] = load_records()
+    st.session_state["records"] = get_records()
 
 if "settings" not in st.session_state:
     st.session_state["settings"] = load_settings()
@@ -117,14 +129,15 @@ with record_tab:
         if not subject.strip():
             st.warning("科目名を入力してください")
         else:
-            st.session_state["records"].append(
-                {   
-                    "date":study_date.isoformat(),
-                    "subject": find_existing_subject(subject.strip(), st.session_state["records"]),
-                    "minutes":minutes
-                }
+            add_record(
+                study_date.isoformat(),
+                find_existing_subject(
+                    subject.strip(),
+                    st.session_state["records"]
+                ),
+                minutes
             )
-            save_records(st.session_state["records"])
+            st.session_state["reocrds"] = get_records()
             st.success("記録が完了しました")
 
 
@@ -310,12 +323,13 @@ with edit_tab:
         )
 
         if st.button("削除する"):
-            delete_number = selected[0]
+            delete_id = selected[0]
 
-            st.session_state["records"].pop(
-                delete_number
+            delete_record(
+                delete_id
             )
-            save_records(st.session_state["records"])
+
+            st.session_state["records"] = get_records()
             st.success("記録を削除しました")
     else:
         st.write("削除できる記録がありません")
@@ -330,8 +344,11 @@ with edit_tab:
             key="edit_record",
             on_change=update_edit_fields
         )
-        edit_number = edit_selected[0]
-        edit_record = st.session_state["records"][edit_number]
+        edit_id = edit_selected[0]
+        for record in st.session_state["records"]:
+            if record["id"] == edit_id:
+                edit_record = record
+                break
 
         time_input_unit = st.session_state["settings"]["time_input_unit"]
 
@@ -380,10 +397,16 @@ with edit_tab:
             if not edit_subject.strip():
                 st.warning("科目名を入力してください")
             else:
-                st.session_state["records"][edit_number]["date"] = edit_study_date.isoformat()
-                st.session_state["records"][edit_number]["subject"] = find_existing_subject(edit_subject.strip(), st.session_state["records"])
-                st.session_state["records"][edit_number]["minutes"] = edit_minutes
-                save_records(st.session_state["records"])
+                update_record(
+                    edit_id,
+                    edit_study_date.isoformat(),
+                    find_existing_subject(
+                        edit_subject.strip(),
+                        st.session_state["records"]
+                    ),
+                    edit_minutes
+                )
+                st.session_state["records"] = get_records()
                 st.success("記録を編集しました")
 
 
