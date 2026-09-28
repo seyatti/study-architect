@@ -11,11 +11,13 @@ from analytics import (
     calculate_daily_totals,
     fill_missing_dates,
     calculate_activity_level,
-    create_heatmap_data
+    create_heatmap_data,
+    create_records_dataframe
 )
 
 import pytest
 from datetime import date
+import pandas as pd
 
 def test_calculate_total_minutes():
     records = [
@@ -929,3 +931,33 @@ def test_create_heatmap_data():
 
     assert result[-1]["weekday"] == 3
     assert result[-1]["week"] == 52
+
+def test_create_records_dataframe():
+    records = [
+        {
+            "id": 1,
+            "date": "2026-09-25",
+            "subject": "Python",
+            "minutes": 90
+        },
+        {
+            "id": 2,
+            "date": "2026-09-26",
+            "subject": "英語",
+            "minutes": 60
+        }
+    ]
+
+    df = create_records_dataframe(records)
+
+    assert pd.api.types.is_datetime64_any_dtype(df["date"])
+    assert len(df) == 2
+    assert df.loc[0, "subject"] == "Python"
+    assert df.loc[0, "minutes"] == 90
+
+def test_create_records_dataframe_empty():
+    records = []
+
+    df = create_records_dataframe(records)
+
+    assert df.empty

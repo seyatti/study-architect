@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+import pandas as pd
 
 def calculate_subject_totals(records):
     totals = {}
@@ -249,3 +250,13 @@ def calculate_activity_level(minutes):
         return 3
     else:
         return 4
+
+def create_records_dataframe(records):
+    df = pd.DataFrame(records)
+
+    if not df.empty:
+        df["date"] = pd.to_datetime(
+            df["date"]
+        )
+
+    return df
