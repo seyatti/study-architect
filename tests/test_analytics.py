@@ -12,7 +12,8 @@ from analytics import (
     fill_missing_dates,
     calculate_activity_level,
     create_heatmap_data,
-    create_records_dataframe
+    create_records_dataframe,
+    calculate_weekday_average
 )
 
 import pytest
@@ -961,3 +962,45 @@ def test_create_records_dataframe_empty():
     df = create_records_dataframe(records)
 
     assert df.empty
+
+def test_calculate_weekday_average():
+    records = [
+        {
+            "id": 1,
+            "date": "2026-09-28",
+            "subject": "Python",
+            "minutes": 60
+        },
+        {
+            "id": 2,
+            "date": "2026-09-28",
+            "subject": "英語",
+            "minutes": 30
+        },
+        {
+            "id": 3,
+            "date": "2026-10-05",
+            "subject": "Python",
+            "minutes": 30
+        },
+        {
+            "id": 4,
+            "date": "2026-09-29",
+            "subject": "Python",
+            "minutes": 120
+        }
+    ]
+
+    expected = {
+        0: 60.0,
+        1: 120.0
+    }
+
+    result = calculate_weekday_average(records)
+
+    assert result == expected
+
+def test_calculate_weekday_average_empty():
+    result = calculate_weekday_average([])
+
+    assert result == {}

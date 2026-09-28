@@ -14,7 +14,7 @@ from analytics import (
     filtered_previous_records_by_period,
     format_difference_minutes,
     create_heatmap_data
-    )
+)
 from database import (
     initialize_database,
     add_record,
@@ -24,7 +24,10 @@ from database import (
     get_settings,
     save_setting
 )
-from subjects import get_subject_options, find_existing_subject
+from subjects import (
+    get_subject_options,
+    find_existing_subject
+)
 
 initialize_database()
 

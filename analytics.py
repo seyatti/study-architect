@@ -260,3 +260,20 @@ def create_records_dataframe(records):
         )
 
     return df
+
+def calculate_weekday_average(records):
+    df = create_records_dataframe(records)
+
+    if df.empty:
+        return {}
+
+    daily = df.groupby(
+        "date",
+        as_index=False
+    )["minutes"].sum()
+
+    daily["weekday"] = daily["date"].dt.weekday
+
+    result = daily.groupby("weekday")["minutes"].mean()
+
+    return result.to_dict()
