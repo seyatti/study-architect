@@ -13,7 +13,8 @@ from analytics import (
     calculate_activity_level,
     create_heatmap_data,
     create_records_dataframe,
-    calculate_weekday_average
+    calculate_weekday_average,
+    calculate_moving_average
 )
 
 import pytest
@@ -1004,3 +1005,45 @@ def test_calculate_weekday_average_empty():
     result = calculate_weekday_average([])
 
     assert result == {}
+
+def test_calculate_moving_average():
+    records = [
+        {
+            "id": 1,
+            "date": "2026-09-01",
+            "subject": "Python",
+            "minutes": 30
+        },
+        {
+            "id": 2,
+            "date": "2026-09-01",
+            "subject": "英語",
+            "minutes": 30
+        },
+        {
+            "id": 3,
+            "date": "2026-09-03",
+            "subject": "Python",
+            "minutes": 120
+        },
+        {
+            "id": 4,
+            "date": "2026-09-04",
+            "subject": "英語",
+            "minutes": 30
+        }
+    ]
+
+    result = calculate_moving_average(records, 3)
+
+    assert result["moving_average"].tolist() == [
+        60,
+        30,
+        60,
+        50
+    ]
+
+def test_calculate_moving_average_empty():
+    result = calculate_moving_average([], 7)
+
+    assert result.empty

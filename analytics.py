@@ -277,3 +277,42 @@ def calculate_weekday_average(records):
     result = daily.groupby("weekday")["minutes"].mean()
 
     return result.to_dict()
+
+def calculate_moving_average(records, window):
+    df = create_records_dataframe(records)
+
+    if df.empty:
+        return pd.DataFrame()
+
+    daily = df.groupby(
+        "date",
+        as_index=False
+    )["minutes"].sum()
+
+    date_range = pd.date_range(
+        start=daily["date"].min(),
+        end=daily["date"].max()
+    )
+
+    daily = daily.set_index("date")
+
+    daily = daily.reindex(
+        date_range,
+        fill_value=0
+    )
+
+    daily = daily.reset_index()
+
+    daily = daily.rename(
+        columns={"index": "date"}
+    )
+
+    daily["moving_average"] = (
+        daily["minutes"]
+        .rolling(
+            window=window,
+            min_periods=1
+        ).mean()
+    )
+
+    return daily
