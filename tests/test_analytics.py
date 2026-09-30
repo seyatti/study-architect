@@ -14,7 +14,8 @@ from analytics import (
     create_heatmap_data,
     create_records_dataframe,
     calculate_weekday_average,
-    calculate_moving_average
+    calculate_moving_average,
+    calculate_recent_trend
 )
 
 import pytest
@@ -1047,3 +1048,76 @@ def test_calculate_moving_average_empty():
     result = calculate_moving_average([], 7)
 
     assert result.empty
+
+def test_calculate_recent_trend_increase():
+    records = [
+        {
+            "id": 1,
+            "date": "2026-09-23",
+            "subject": "Python",
+            "minutes": 60
+        },
+        {
+            "id": 2,
+            "date": "2026-09-29",
+            "subject": "英語",
+            "minutes": 30
+        },
+        {
+            "id": 3,
+            "date": "2026-09-16",
+            "subject": "Python",
+            "minutes": 40
+        },
+        {
+            "id": 4,
+            "date": "2026-09-22",
+            "subject": "英語",
+            "minutes": 20
+        }
+    ]
+
+    result = calculate_recent_trend(records, today=date(2026, 9, 29))
+
+    assert result == {
+        "recent_total": 90,
+        "previous_total": 60,
+        "difference": 30,
+        "change_rate": 50.0,
+        "trend" : "increase"
+    }
+
+def test_calculate_recent_trend_empty():
+    result = calculate_recent_trend([], today=date(2026, 9, 29))
+
+    assert result == {
+        "recent_total": 0,
+        "previous_total": 0,
+        "difference": 0,
+        "change_rate": None,
+        "trend": "stable"
+    }
+
+def test_calculate_recent_trend_decrease():
+    records = [
+        {
+            "id": 1,
+            "date": "2026-09-29",
+            "subject": "Python",
+            "minutes": 60
+        },
+        {
+            "id": 2,
+            "date": "2026-09-22",
+            "subject": "Python",
+            "minutes": 100
+        }
+    ]
+
+    result = calculate_recent_trend(
+        records,
+        today=date(2026, 9, 29)
+    )
+
+    assert result["trend"] == "decrease"
+    assert result["change_rate"] == -40

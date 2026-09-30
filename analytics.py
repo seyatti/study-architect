@@ -316,3 +316,62 @@ def calculate_moving_average(records, window):
     )
 
     return daily
+
+def calculate_recent_trend(records, days=7, today=None):
+    if today is None:
+        today = date.today()
+
+    recent_end = today
+    recent_start = today - timedelta(days= days - 1)
+
+    previous_end = recent_start - timedelta(days=1)
+    previous_start = previous_end - timedelta(days= days - 1)
+
+    df = create_records_dataframe(records)
+
+    if df.empty:
+        return {
+        "recent_total": 0,
+        "previous_total": 0,
+        "difference": 0,
+        "trend": "stable"
+    }
+
+    recent_mask = (
+        (df["date"].dt.date >= recent_start)
+        & (df["date"].dt.date <= recent_end) 
+    )
+
+    recent_records = df[recent_mask]
+
+    previous_mask = (
+        (df["date"].dt.date >= previous_start)
+        & (df["date"].dt.date <= previous_end)
+    )
+
+    previous_records = df[previous_mask]
+
+    recent_total = recent_records["minutes"].sum()
+    previous_total = previous_records["minutes"].sum()
+
+    difference = recent_total - previous_total
+
+    if difference > 0:
+        trend = "increase"
+    elif difference < 0:
+        trend = "decrease"
+    else:
+        trend = "stable"
+
+    if previous_total > 0:
+        change_rate = round(difference / previous_total * 100, 1)
+    else:
+        change_rate = None
+
+    return {
+        "recent_total": recent_total,
+        "previous_total": previous_total,
+        "difference": difference,
+        "change_rate": change_rate,
+        "trend": trend
+    }
