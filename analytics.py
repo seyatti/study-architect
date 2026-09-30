@@ -334,6 +334,7 @@ def calculate_recent_trend(records, days=7, today=None):
         "recent_total": 0,
         "previous_total": 0,
         "difference": 0,
+        "change_rate": None,
         "trend": "stable"
     }
 
@@ -375,3 +376,26 @@ def calculate_recent_trend(records, days=7, today=None):
         "change_rate": change_rate,
         "trend": trend
     }
+
+def calculate_subject_stats(records):
+    df = create_records_dataframe(records)
+
+    if df.empty:
+        return {}
+
+    subject_totals = df.groupby("subject")["minutes"].sum()
+    study_days = df.groupby("subject")["date"].nunique()
+    average_minutes = round(subject_totals / study_days, 1)
+    last_studied_date = df.groupby("subject")["date"].max()
+    last_studied_date = last_studied_date.dt.strftime("%Y-%m-%d")
+
+    stats = pd.DataFrame(
+        {
+            "total_minutes": subject_totals,
+            "study_days": study_days,
+            "average_minutes": average_minutes,
+            "last_studied_date": last_studied_date
+        }
+    )
+
+    return stats.to_dict(orient="index")
