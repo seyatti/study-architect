@@ -1145,26 +1145,28 @@ def test_calculate_subject_stats():
         },
         {
             "id": 4,
-            "date": "2026-09-29",
+            "date": "2026-09-25",
             "subject": "英語",
             "minutes": 60
         }
     ]
 
-    result = calculate_subject_stats(records)
+    result = calculate_subject_stats(records, today=date(2026, 9, 30))
 
     assert result == {
         "Python": {
             "total_minutes": 210,
             "study_days": 2,
             "average_minutes": 105.0,
-            "last_studied_date": "2026-09-29"
+            "last_studied_date": "2026-09-29",
+            "days_since_last_study": 1
         },
         "英語": {
             "total_minutes": 60,
             "study_days": 1,
             "average_minutes": 60.0,
-            "last_studied_date": "2026-09-29"
+            "last_studied_date": "2026-09-25",
+            "days_since_last_study": 5
         }
     }
 
