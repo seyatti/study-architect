@@ -16,7 +16,8 @@ from analytics import (
     calculate_weekday_average,
     calculate_moving_average,
     calculate_recent_trend,
-    calculate_subject_stats
+    calculate_subject_stats,
+    calculate_subject_trends
 )
 
 import pytest
@@ -1172,5 +1173,60 @@ def test_calculate_subject_stats():
 
 def test_calculate_subject_stats_empty():
     result = calculate_subject_stats([])
+
+    assert result == {}
+
+def test_calculate_subject_trends():
+    records = [
+            {
+                "id": 1,
+                "date": "2026-09-20",
+                "subject": "Python",
+                "minutes": 60
+            },
+            {
+                "id": 2,
+                "date": "2026-09-28",
+                "subject": "Python",
+                "minutes": 120
+            },
+            {
+                "id": 3,
+                "date": "2026-09-21",
+                "subject": "英語",
+                "minutes": 90
+            },
+            {
+                "id": 4,
+                "date": "2026-09-29",
+                "subject": "英語",
+                "minutes": 30
+            }
+    ]
+
+    result = calculate_subject_trends(
+        records,
+        today=date(2026, 10, 1)
+    )
+
+    assert result == {
+        "Python": {
+            "recent_total": 120,
+            "previous_total": 60,
+            "difference": 60,
+            "change_rate": 100,
+            "trend": "increase"
+        },
+        "英語": {
+            "recent_total": 30,
+            "previous_total": 90,
+            "difference": -60,
+            "change_rate": - 66.7,
+            "trend": "decrease"
+        }
+    }
+
+def test_calculate_subject_trends_empty():
+    result = calculate_subject_trends([])
 
     assert result == {}

@@ -407,3 +407,26 @@ def calculate_subject_stats(records, today=None):
     )
 
     return stats.to_dict(orient="index")
+
+def calculate_subject_trends(records, days=7, today=None):
+    df = create_records_dataframe(records)
+
+    if df.empty:
+        return {}
+
+    subjects = df["subject"].unique()
+
+    result = {}
+
+    for subject in subjects:
+        subject_df = df[df["subject"] == subject]
+
+        subject_dict = subject_df.to_dict(orient="records")
+
+        result[subject] = calculate_recent_trend(
+            subject_dict,
+            days=days,
+            today=today
+            )
+
+    return result
