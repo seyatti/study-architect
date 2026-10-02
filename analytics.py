@@ -430,3 +430,23 @@ def calculate_subject_trends(records, days=7, today=None):
             )
 
     return result
+
+def calculate_weekly_study_days(records):
+    df = create_records_dataframe(records)
+
+    if df.empty:
+        return {}
+
+    study_dates = df[["date"]].drop_duplicates()
+    study_dates["weekday"] = study_dates["date"].dt.weekday
+
+    study_dates["week_start"] = (
+        study_dates["date"] - pd.to_timedelta(
+            study_dates["weekday"],
+            unit="D"
+        )
+    )
+
+    weekly_count = study_dates.groupby("week_start").size()
+
+    return weekly_count.to_dict()

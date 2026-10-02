@@ -17,7 +17,8 @@ from analytics import (
     calculate_moving_average,
     calculate_recent_trend,
     calculate_subject_stats,
-    calculate_subject_trends
+    calculate_subject_trends,
+    calculate_weekly_study_days
 )
 
 import pytest
@@ -1228,5 +1229,52 @@ def test_calculate_subject_trends():
 
 def test_calculate_subject_trends_empty():
     result = calculate_subject_trends([])
+
+    assert result == {}
+
+def test_calculate_weekly_study_days():
+
+    records = [
+        {
+            "id": 1,
+            "date": "2026-09-28",
+            "subject": "Python",
+            "minutes": 60
+        },
+        {
+            "id": 2,
+            "date": "2026-09-28",
+            "subject": "英語",
+            "minutes": 30
+        },
+        {
+            "id": 3,
+            "date": "2026-09-30",
+            "subject": "Python",
+            "minutes": 90
+        },
+        {
+            "id": 4,
+            "date": "2026-10-04",
+            "subject": "英語",
+            "minutes": 45
+        },
+        {
+            "id": 5,
+            "date": "2026-10-05",
+            "subject": "Python",
+            "minutes": 120
+        }
+    ]
+
+    result = calculate_weekly_study_days(records)
+
+    assert result == {
+        pd.Timestamp("2026-09-28"): 3,
+        pd.Timestamp("2026-10-05"): 1,
+    }
+
+def test_calculate_weekly_study_days_empty():
+    result = calculate_weekly_study_days([])
 
     assert result == {}
