@@ -483,3 +483,29 @@ def calculate_weekday_study_rate(records):
     weekday_study_percent = weekday_study_counts / weekday_total_count * 100
 
     return weekday_study_percent.round(1).to_dict()
+
+def calculate_daily_study_statistics(records):
+    df = create_records_dataframe(records)
+
+    if df.empty:
+        return {}
+
+    daily = df.groupby("date")["minutes"].sum()
+
+    all_dates = pd.date_range(
+        start=df["date"].min(),
+        end=df["date"].max()
+    )
+
+    daily = daily.reindex(
+        all_dates,
+        fill_value=0
+    )
+
+    daily_study_statistics = {
+        "mean": daily.mean(),
+        "median": daily.median(),
+        "std": daily.std(ddof=0)
+    }
+
+    return daily_study_statistics

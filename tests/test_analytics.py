@@ -19,7 +19,8 @@ from analytics import (
     calculate_subject_stats,
     calculate_subject_trends,
     calculate_weekly_study_days,
-    calculate_weekday_study_rate
+    calculate_weekday_study_rate,
+    calculate_daily_study_statistics
 )
 
 import pytest
@@ -1317,5 +1318,44 @@ def test_calculate_weekday_study_rate():
 def test_calculate_weekday_study_rate_empty():
 
     result = calculate_weekday_study_rate([])
+
+    assert result == {}
+
+def test_calculate_daily_study_statistics():
+
+    records = [
+        {
+            "id": 1,
+            "date": "2026-09-28",
+            "subject": "Python",
+            "minutes": 60
+        },
+        {
+            "id": 2,
+            "date": "2026-09-28",
+            "subject": "英語",
+            "minutes": 30
+        },
+        {
+            "id": 3,
+            "date": "2026-09-30",
+            "subject": "Python",
+            "minutes": 90
+        }
+    ]
+
+    result = calculate_daily_study_statistics(records)
+
+    expected = {
+        "mean": 60.0,
+        "median": 90.0,
+        "std": pytest.approx(42.43, abs=0.01)
+    }
+
+    assert result == expected
+
+def test_calculate_daily_study_statistics_empty():
+
+    result = calculate_daily_study_statistics([])
 
     assert result == {}
