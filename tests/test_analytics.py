@@ -18,7 +18,8 @@ from analytics import (
     calculate_recent_trend,
     calculate_subject_stats,
     calculate_subject_trends,
-    calculate_weekly_study_days
+    calculate_weekly_study_days,
+    calculate_weekday_study_rate
 )
 
 import pytest
@@ -1276,5 +1277,45 @@ def test_calculate_weekly_study_days():
 
 def test_calculate_weekly_study_days_empty():
     result = calculate_weekly_study_days([])
+
+    assert result == {}
+
+def test_calculate_weekday_study_rate():
+    records = [
+        {
+            "id": 1,
+            "date": "2026-09-28",  # 月
+            "subject": "Python",
+            "minutes": 60
+        },
+        {
+            "id": 2,
+            "date": "2026-09-30",  # 水
+            "subject": "英語",
+            "minutes": 30
+        },
+        {
+            "id": 3,
+            "date": "2026-10-05",  # 月
+            "subject": "Python",
+            "minutes": 90
+        }
+    ]
+
+    result = calculate_weekday_study_rate(records)
+
+    assert result == {
+        0: 100.0,
+        1: 0.0,
+        2: 100.0,
+        3: 0.0,
+        4: 0.0,
+        5: 0.0,
+        6: 0.0
+    }
+
+def test_calculate_weekday_study_rate_empty():
+
+    result = calculate_weekday_study_rate([])
 
     assert result == {}

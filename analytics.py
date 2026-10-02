@@ -450,3 +450,36 @@ def calculate_weekly_study_days(records):
     weekly_count = study_dates.groupby("week_start").size()
 
     return weekly_count.to_dict()
+
+def calculate_weekday_study_rate(records):
+    df = create_records_dataframe(records)
+
+    if df.empty:
+        return {}
+
+    all_dates = pd.date_range(
+        start=df["date"].min(),
+        end=df["date"].max()
+    )
+
+    all_weekdays = all_dates.weekday
+    weekday_total_count = (
+        pd.Series(all_weekdays)
+        .value_counts()
+    )
+
+    study_dates = df[["date"]].drop_duplicates()
+    study_dates["weekday"] = study_dates["date"].dt.weekday
+
+    weekday_study_counts = (
+        study_dates["weekday"]
+        .value_counts()
+    )
+
+    weekday_study_counts = weekday_study_counts.reindex(
+        weekday_total_count.index,
+        fill_value = 0
+    )
+    weekday_study_percent = weekday_study_counts / weekday_total_count * 100
+
+    return weekday_study_percent.round(1).to_dict()
