@@ -550,3 +550,19 @@ def calculate_goal_progress(
     }
 
     return result
+
+def create_analysis_summary(records, today=None):
+
+    daily_statistics = calculate_daily_study_statistics(records)
+    weekday_average = calculate_weekday_average(records)
+    recent_trend = calculate_recent_trend(records, today=today)
+    subject_stats = calculate_subject_stats(records, today=today)
+    subject_trends = calculate_subject_trends(records, today=today)
+
+    return {
+        "daily_statistics": daily_statistics,
+        "weekday_average": weekday_average,
+        "recent_trend": recent_trend,
+        "subject_stats": subject_stats,
+        "subject_trends": subject_trends
+    }

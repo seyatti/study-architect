@@ -21,7 +21,8 @@ from analytics import (
     calculate_weekly_study_days,
     calculate_weekday_study_rate,
     calculate_daily_study_statistics,
-    calculate_goal_progress
+    calculate_goal_progress,
+    create_analysis_summary
 )
 
 import pytest
@@ -1432,3 +1433,83 @@ def test_calculate_goal_progress_empty():
     }
 
     assert result == expected
+
+def test_create_analysis_summary():
+
+    records = [
+        {
+            "id": 1,
+            "date": "2026-09-20",
+            "subject": "Python",
+            "minutes": 60
+        },
+        {
+            "id": 2,
+            "date": "2026-09-28",
+            "subject": "Python",
+            "minutes": 120
+        },
+        {
+            "id": 3,
+            "date": "2026-09-21",
+            "subject": "英語",
+            "minutes": 90
+        },
+        {
+            "id": 4,
+            "date": "2026-09-29",
+            "subject": "英語",
+            "minutes": 30
+        }
+    ]
+
+    result = create_analysis_summary(
+        records,
+        today=date(2026, 10, 1)
+    )
+
+    assert result["recent_trend"] == {
+        "recent_total": 150,
+        "previous_total": 150,
+        "difference": 0,
+        "change_rate": 0.0,
+        "trend": "stable"
+    }
+
+    assert result["subject_trends"]["Python"] == {
+        "recent_total": 120,
+        "previous_total": 60,
+        "difference": 60,
+        "change_rate": 100.0,
+        "trend": "increase"
+    }
+
+    assert result["subject_trends"]["英語"] == {
+        "recent_total": 30,
+        "previous_total": 90,
+        "difference": -60,
+        "change_rate": -66.7,
+        "trend": "decrease"
+    }
+
+    assert "daily_statistics" in result
+    assert "weekday_average" in result
+    assert "subject_stats" in result
+
+def test_create_analysis_summary_empty():
+    result = create_analysis_summary(
+        [],
+        today=date(2026, 10, 1)
+    )
+
+    assert result["daily_statistics"] == {}
+    assert result["weekday_average"] == {}
+    assert result["subject_stats"] == {}
+    assert result["subject_trends"] == {}
+    assert result["recent_trend"] == {
+        "recent_total": 0,
+        "previous_total": 0,
+        "difference": 0,
+        "change_rate": None,
+        "trend": "stable"
+    }
