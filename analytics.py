@@ -509,3 +509,44 @@ def calculate_daily_study_statistics(records):
     }
 
     return daily_study_statistics
+
+def calculate_goal_progress(
+        records,
+        target_minutes,
+        start_date,
+        end_date,
+        today=None
+):
+    df = create_records_dataframe(records)
+
+    if df.empty:
+        actual_minutes = 0
+    else:
+        goal_mask = (df["date"].dt.date >= start_date) & (df["date"].dt.date <= end_date)
+        goal_records = df[goal_mask]
+        actual_minutes = goal_records["minutes"].sum()
+
+    if today is None:
+        today = date.today()
+
+    if target_minutes > 0:
+        achievement_rate = round(actual_minutes / target_minutes * 100, 1)
+    else:
+        achievement_rate = 0.0
+
+    remaining_minutes = max(target_minutes - actual_minutes, 0)
+    remaining_days = max((end_date - today).days + 1, 0)
+    if remaining_days > 0:
+        required_daily_minutes = round(remaining_minutes / remaining_days, 1)
+    else:
+        required_daily_minutes = 0.0
+
+    result = {
+        "actual_minutes": actual_minutes,
+        "achievement_rate": achievement_rate,
+        "remaining_minutes": remaining_minutes,
+        "remaining_days": remaining_days,
+        "required_daily_minutes": required_daily_minutes
+    }
+
+    return result

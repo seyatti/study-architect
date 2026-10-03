@@ -20,7 +20,8 @@ from analytics import (
     calculate_subject_trends,
     calculate_weekly_study_days,
     calculate_weekday_study_rate,
-    calculate_daily_study_statistics
+    calculate_daily_study_statistics,
+    calculate_goal_progress
 )
 
 import pytest
@@ -1359,3 +1360,75 @@ def test_calculate_daily_study_statistics_empty():
     result = calculate_daily_study_statistics([])
 
     assert result == {}
+
+def test_calculate_goal_progress():
+    records = [
+        {
+            "id": 1,
+            "date": "2026-09-30",
+            "subject": "Python",
+            "minutes": 300
+        },
+        {
+            "id": 2,
+            "date": "2026-10-01",
+            "subject": "Python",
+            "minutes": 120
+        },
+        {
+            "id": 3,
+            "date": "2026-10-02",
+            "subject": "英語",
+            "minutes": 180
+        },
+        {
+            "id": 4,
+            "date": "2026-10-03",
+            "subject": "Python",
+            "minutes": 60
+        },
+        {
+            "id": 5,
+            "date": "2026-10-08",
+            "subject": "英語",
+            "minutes": 500
+        }
+    ]
+
+    result = calculate_goal_progress(
+        records,
+        target_minutes=600,
+        start_date=date(2026, 10, 1),
+        end_date=date(2026, 10, 7),
+        today=date(2026, 10, 3)
+    )
+
+    expected = {
+        "actual_minutes": 360,
+        "achievement_rate": 60.0,
+        "remaining_minutes": 240,
+        "remaining_days": 5,
+        "required_daily_minutes": 48
+    }
+
+    assert result == expected
+
+
+def test_calculate_goal_progress_empty():
+    result = calculate_goal_progress(
+        [],
+        target_minutes=600,
+        start_date=date(2026, 10, 1),
+        end_date=date(2026, 10, 7),
+        today=date(2026, 10, 3)
+    )
+
+    expected = {
+        "actual_minutes": 0,
+        "achievement_rate": 0.0,
+        "remaining_minutes": 600,
+        "remaining_days": 5,
+        "required_daily_minutes": 120
+    }
+
+    assert result == expected
