@@ -276,6 +276,11 @@ def calculate_weekday_average(records):
 
     result = daily.groupby("weekday")["minutes"].mean()
 
+    result = result.reindex(
+        range(7),
+        fill_value=0
+    )
+
     return result.to_dict()
 
 def calculate_moving_average(records, window):

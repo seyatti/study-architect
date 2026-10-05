@@ -334,6 +334,10 @@ with view_tab:
             weekday_labels[weekday]: average
             for weekday, average in weekday_average.items()
         }
+        weekday_average_df = pd.DataFrame(
+            list(weekday_average_display.items()),
+            columns=["weekday", "average"]
+        )
         recent_trend = analysis_summary["recent_trend"]
         trend_labels = {"increase": "増加", "decrease": "減少", "stable": "横ばい"}
         trend_display = trend_labels[recent_trend["trend"]]
@@ -353,6 +357,7 @@ with view_tab:
             change_rate_display = f"{change_rate}%"
         elif change_rate == 0:
             change_rate_display = "±0%"
+        subject_stats = analysis_summary["subject_stats"]
 
 
         if daily_statistics:
@@ -361,7 +366,7 @@ with view_tab:
             with cols1:
                 st.metric(
                     "1日の平均勉強時間",
-                    f"{daily_statistics["mean"]}分"
+                    f"{round(daily_statistics["mean"], 1)}分"
                 )
 
             with cols2:
@@ -378,8 +383,25 @@ with view_tab:
         else:
             st.info("まだ分析できる学習記録がありません")
 
-        if weekday_average_display:
-            st.bar_chart(weekday_average_display)
+        if not weekday_average_df.empty:
+            weekday_Chart = (
+                alt.Chart(weekday_average_df)
+                .mark_bar()
+                .encode(
+                    x=alt.X(
+                        "weekday:N",
+                        sort=["月", "火", "水", "木", "金", "土", "日"],
+                        axis=alt.Axis(labelAngle=0)
+                    ),
+                    y=alt.Y(
+                        "average:Q"
+                    )
+                )
+            )
+            st.altair_chart(
+                weekday_Chart,
+                use_container_width=True
+            )
 
         trend_col1, trend_col2 = st.columns(2)
 
@@ -396,6 +418,32 @@ with view_tab:
                 trend_display,
                 delta=change_rate_display
             )
+
+        if subject_stats:
+            df_subject_stats = pd.DataFrame.from_dict(subject_stats, orient="index").reset_index()
+            df_subject_stats = df_subject_stats.rename(
+                columns={
+                    "index": "科目",
+                    "total_minutes": "合計勉強時間",
+                    "study_days": "学習日数",
+                    "average_minutes": "1日平均",
+                    "last_studied_date": "最終学習日",
+                    "days_since_last_study": "最終学習からの日数"
+                }
+            )
+            df_subject_stats = df_subject_stats.sort_values(
+                by="合計勉強時間",
+                ascending=False
+            )
+            df_subject_stats["合計勉強時間"] = (
+                df_subject_stats["合計勉強時間"]
+                .apply(format_minutes)
+            )
+            df_subject_stats["1日平均"] = (
+                df_subject_stats["1日平均"]
+                .apply(lambda minutes: format_minutes(round(minutes)))
+            )
+            st.dataframe(df_subject_stats)
 
     with goal_tab:
         pass
