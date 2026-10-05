@@ -1500,6 +1500,7 @@ def test_create_analysis_summary():
     assert "daily_statistics" in result
     assert "weekday_average" in result
     assert "subject_stats" in result
+    assert "weekday_study_rate" in result
 
 def test_create_analysis_summary_empty():
     result = create_analysis_summary(

@@ -359,6 +359,15 @@ with view_tab:
             change_rate_display = "±0%"
         subject_stats = analysis_summary["subject_stats"]
         subject_trend = analysis_summary["subject_trends"]
+        weekday_study_rate = analysis_summary["weekday_study_rate"]
+        weekday_study_rate_display = {
+            weekday_labels[weekday]: rate
+            for weekday, rate in weekday_study_rate.items()
+        }
+        weekday_study_rate_df = pd.DataFrame(
+            list(weekday_study_rate_display.items()),
+            columns=["weekday", "rate"]
+        )
 
 
         if daily_statistics:
@@ -484,6 +493,28 @@ with view_tab:
                        )
             )
             st.dataframe(df_subject_trend)
+
+        if not weekday_study_rate_df.empty:
+            weekday_study_rate_chart = (
+                alt.Chart(weekday_study_rate_df)
+                .mark_bar()
+                .encode(
+                    x=alt.X(
+                        "weekday:N",
+                        sort=["月", "火", "水", "木", "金", "土", "日"],
+                        axis=alt.Axis(labelAngle=0)
+                    ),
+                    y=alt.Y(
+                        "rate:Q",
+                        scale=alt.Scale(domain=[0, 100]),
+                        axis=alt.Axis(title="学習率(%)")
+                    )
+                )
+            )
+            st.altair_chart(
+                weekday_study_rate_chart,
+                use_container_width=True
+            )
 
     with goal_tab:
         pass
