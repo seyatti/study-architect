@@ -358,6 +358,7 @@ with view_tab:
         elif change_rate == 0:
             change_rate_display = "±0%"
         subject_stats = analysis_summary["subject_stats"]
+        subject_trend = analysis_summary["subject_trends"]
 
 
         if daily_statistics:
@@ -444,6 +445,45 @@ with view_tab:
                 .apply(lambda minutes: format_minutes(round(minutes)))
             )
             st.dataframe(df_subject_stats)
+
+        if subject_trend:
+            df_subject_trend = pd.DataFrame.from_dict(subject_trend, orient="index").reset_index()
+            df_subject_trend = df_subject_trend.rename(
+                columns={
+                    "index": "科目",
+                    "recent_total": "直近7日",
+                    "previous_total": "前の7日",
+                    "difference": "差分",
+                    "change_rate": "変化率",
+                    "trend": "トレンド"
+                }
+            )
+            df_subject_trend["トレンド"] = (
+                df_subject_trend["トレンド"]
+                .apply(lambda trend: trend_labels[trend])
+            )
+            df_subject_trend["直近7日"]= (
+                df_subject_trend["直近7日"]
+                .apply(lambda recent_total: format_minutes(round(recent_total)))
+            )
+            df_subject_trend["前の7日"] = (
+                df_subject_trend["前の7日"]
+                .apply(lambda previous_total: format_minutes(round(previous_total)))
+            )
+            df_subject_trend["差分"] = (
+                df_subject_trend["差分"]
+                .apply(lambda difference: format_difference_minutes(difference))
+            )
+            df_subject_trend["変化率"] = (
+                df_subject_trend["変化率"]
+                .apply(lambda rate:
+                       "比較不可" if pd.isna(rate)
+                       else f"+{rate}%" if rate > 0
+                       else f"{rate}%" if rate < 0
+                       else "±0%"
+                       )
+            )
+            st.dataframe(df_subject_trend)
 
     with goal_tab:
         pass
