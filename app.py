@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import date
 import pandas as pd
 import altair as alt
+import math
 from analytics import (
     filtered_records_by_period,
     calculate_subject_totals,
@@ -14,7 +15,8 @@ from analytics import (
     filtered_previous_records_by_period,
     format_difference_minutes,
     create_heatmap_data,
-    create_analysis_summary
+    create_analysis_summary,
+    calculate_goal_progress
 )
 from database import (
     initialize_database,
@@ -544,8 +546,63 @@ with view_tab:
             )
 
     with goal_tab:
-        pass
 
+        if "options_goal" not in st.session_state:
+            st.session_state["options_goal"] = {}
+
+        st.session_state["options_goal"]["study_time"] = st.number_input(
+            "目標勉強時間（分）",
+            min_value = 1,
+            step=1
+        )
+        st.session_state["options_goal"]["study_start_date"] = st.date_input("開始日")
+        st.session_state["options_goal"]["study_end_date"] = st.date_input("終了日")
+
+        if st.session_state["options_goal"]["study_start_date"] > st.session_state["options_goal"]["study_end_date"]:
+            st.error("開始日が終了日より大きいです")
+        else:
+            goal_progress = calculate_goal_progress(
+                st.session_state["records"],
+                st.session_state["options_goal"]["study_time"],
+                st.session_state["options_goal"]["study_start_date"],
+                st.session_state["options_goal"]["study_end_date"],
+                date.today()
+            )
+
+            goal_col1, goal_col2 = st.columns(2)
+
+            with goal_col1:
+                st.metric(
+                    "実際の勉強時間",
+                    format_minutes(goal_progress["actual_minutes"])
+                )
+
+            with goal_col2:
+                st.progress(
+                    min(goal_progress["achievement_rate"] / 100, 1.0),
+                    text="目標達成率"
+                )
+                st.caption(f"{goal_progress["achievement_rate"]}%")
+
+            goal_col3, goal_col4, goal_col5 = st.columns(3)
+
+            with goal_col3:
+                st.metric(
+                    "残りの勉強時間",
+                    format_minutes(goal_progress["remaining_minutes"])
+                )
+
+            with goal_col4:
+                st.metric(
+                    "残りの日数",
+                    f"{goal_progress["remaining_days"]}日"
+                )
+
+            with goal_col5:
+                st.metric(
+                    "1日に必要な勉強時間",
+                    format_minutes(math.ceil(goal_progress["required_daily_minutes"]))
+                )
 
 
 with edit_tab:
