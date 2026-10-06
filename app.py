@@ -368,7 +368,15 @@ with view_tab:
             list(weekday_study_rate_display.items()),
             columns=["weekday", "rate"]
         )
-
+        weekly_study_days = analysis_summary["weekly_study_days"]
+        weekly_study_days_df = pd.DataFrame(
+            list(weekly_study_days.items()),
+            columns=["week_start", "study_days"]
+        )
+        weekly_study_days_df["week_start"] = (
+            weekly_study_days_df["week_start"]
+            .dt.strftime("%Y-%m-%d")
+        )
 
         if daily_statistics:
             cols1, cols2, cols3 = st.columns(3)
@@ -513,6 +521,25 @@ with view_tab:
             )
             st.altair_chart(
                 weekday_study_rate_chart,
+                use_container_width=True
+            )
+
+        if not weekly_study_days_df.empty:
+            weekly_chart = (
+                alt.Chart(weekly_study_days_df)
+                .mark_line(point=True)
+                .encode(
+                    x=alt.X(
+                        "week_start:T"
+                    ),
+                    y=alt.Y(
+                        "study_days:Q",
+                        scale=alt.Scale(domain=[0, 7])
+                    )
+                )
+            )
+            st.altair_chart(
+                weekly_chart,
                 use_container_width=True
             )
 

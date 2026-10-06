@@ -564,6 +564,7 @@ def create_analysis_summary(records, today=None):
     subject_stats = calculate_subject_stats(records, today=today)
     subject_trends = calculate_subject_trends(records, today=today)
     weekday_study_rate = calculate_weekday_study_rate(records)
+    weekly_study_days = calculate_weekly_study_days(records)
 
     return {
         "daily_statistics": daily_statistics,
@@ -571,5 +572,6 @@ def create_analysis_summary(records, today=None):
         "recent_trend": recent_trend,
         "subject_stats": subject_stats,
         "subject_trends": subject_trends,
-        "weekday_study_rate": weekday_study_rate
+        "weekday_study_rate": weekday_study_rate,
+        "weekly_study_days": weekly_study_days
     }
