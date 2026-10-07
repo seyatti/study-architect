@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import date
+from datetime import date, timedelta
 import pandas as pd
 import altair as alt
 import math
@@ -25,7 +25,9 @@ from database import (
     update_record,
     delete_record,
     get_settings,
-    save_setting
+    save_setting,
+    save_goal,
+    get_goal
 )
 from subjects import (
     get_subject_options,
@@ -77,6 +79,20 @@ if "records" not in st.session_state:
 
 if "settings" not in st.session_state:
     st.session_state["settings"] = get_settings()
+
+if "options_goal" not in st.session_state:
+    st.session_state["options_goal"] = {}
+
+    saved_goal = get_goal()
+
+    if saved_goal is None:
+        st.session_state["options_goal"]["study_time"] = 420
+        st.session_state["options_goal"]["study_start_date"] = date.today()
+        st.session_state["options_goal"]["study_end_date"] = date.today() + timedelta(days=6)
+    else:
+        st.session_state["options_goal"]["study_time"] = saved_goal[0]
+        st.session_state["options_goal"]["study_start_date"] = date.fromisoformat(saved_goal[1])
+        st.session_state["options_goal"]["study_end_date"] = date.fromisoformat(saved_goal[2])
 
 st.session_state["settings"].setdefault(
 "time_input_unit",
@@ -552,15 +568,29 @@ with view_tab:
 
         st.session_state["options_goal"]["study_time"] = st.number_input(
             "目標勉強時間（分）",
+            value = st.session_state["options_goal"]["study_time"],
             min_value = 1,
             step=1
         )
-        st.session_state["options_goal"]["study_start_date"] = st.date_input("開始日")
-        st.session_state["options_goal"]["study_end_date"] = st.date_input("終了日")
+        st.session_state["options_goal"]["study_start_date"] = st.date_input(
+            "開始日",
+            value = st.session_state["options_goal"]["study_start_date"]
+            )
+        st.session_state["options_goal"]["study_end_date"] = st.date_input(
+            "終了日",
+            value = st.session_state["options_goal"]["study_end_date"]
+            )
 
         if st.session_state["options_goal"]["study_start_date"] > st.session_state["options_goal"]["study_end_date"]:
             st.error("開始日が終了日より大きいです")
         else:
+            if st.button("目標に設定"):
+                save_goal(
+                    st.session_state["options_goal"]["study_time"],
+                    st.session_state["options_goal"]["study_start_date"].isoformat(),
+                    st.session_state["options_goal"]["study_end_date"].isoformat(),
+                )
+
             goal_progress = calculate_goal_progress(
                 st.session_state["records"],
                 st.session_state["options_goal"]["study_time"],

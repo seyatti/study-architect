@@ -19,8 +19,18 @@ def initialize_database(db_path="data/study_architect.db"):
     )
     """
 
+    goal_sql = """
+    CREATE TABLE IF NOT EXISTS goal (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        target_minutes INTEGER NOT NULL,
+        start_date TEXT NOT NULL,
+        end_date TEXT NOT NULL
+    )
+    """
+
     connection.execute(records_sql)
     connection.execute(settings_sql)
+    connection.execute(goal_sql)
 
     connection.commit()
     connection.close()
@@ -157,3 +167,63 @@ def get_settings(db_path="data/study_architect.db"):
     connection.close()
 
     return settings
+
+def save_goal(
+        target_minutes,
+        start_date,
+        end_date,
+        db_path="data/study_architect.db"
+        ):
+
+    connection = sqlite3.connect(db_path)
+
+    sql = """
+    INSERT INTO goal(
+        id,
+        target_minutes,
+        start_date,
+        end_date
+    )
+    VALUES (
+        1,
+        ?,
+        ?,
+        ?
+    )
+    ON CONFLICT(id) DO UPDATE SET
+        target_minutes = excluded.target_minutes,
+        start_date = excluded.start_date,
+        end_date = excluded.end_date
+    """
+
+    connection.execute(
+        sql,
+        (
+            target_minutes,
+            start_date,
+            end_date
+        )
+    )
+
+    connection.commit()
+    connection.close()
+
+def get_goal(db_path="data/study_architect.db"):
+
+    connection = sqlite3.connect(db_path)
+
+    sql = """
+    SELECT
+        target_minutes,
+        start_date,
+        end_date
+    FROM goal
+    WHERE id = 1
+    """
+
+    cursor = connection.execute(sql)
+    goal = cursor.fetchone()
+
+    connection.close()
+
+    return goal
