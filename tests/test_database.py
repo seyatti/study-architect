@@ -5,7 +5,9 @@ from database import (
     update_record,
     delete_record,
     save_setting,
-    get_settings
+    get_settings,
+    save_goal,
+    get_goal
 )
 import sqlite3
 
@@ -236,3 +238,56 @@ def test_get_settings_returns_defaults(tmp_path):
     }
 
     assert result == settings
+
+def test_save_and_get_goal(tmp_path):
+    db_path = tmp_path / "test.db"
+    initialize_database(db_path)
+
+    save_goal(
+        1200,
+        "2026-10-08",
+        "2026-10-14",
+        db_path
+    )
+
+    result = get_goal(db_path)
+
+    assert result == {
+        "target_minutes": 1200,
+        "start_date": "2026-10-08",
+        "end_date": "2026-10-14"
+    }
+
+def test_save_and_get_goal_empty(tmp_path):
+    db_path = tmp_path / "test.db"
+    initialize_database(db_path)
+
+    result = get_goal(db_path)
+
+    assert result is None
+
+def test_save_and_get_upsert_goal(tmp_path):
+    db_path = tmp_path / "test.db"
+    initialize_database(db_path)
+
+    save_goal(
+        420,
+        "2026-10-08",
+        "2026-10-14",
+        db_path
+    )
+
+    save_goal(
+        1200,
+        "2026-10-15",
+        "2026-10-21",
+        db_path
+    )
+
+    result = get_goal(db_path)
+
+    assert result == {
+        "target_minutes": 1200,
+        "start_date": "2026-10-15",
+        "end_date": "2026-10-21"
+    }

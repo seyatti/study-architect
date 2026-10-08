@@ -222,7 +222,15 @@ def get_goal(db_path="data/study_architect.db"):
     """
 
     cursor = connection.execute(sql)
-    goal = cursor.fetchone()
+    cursor_f = cursor.fetchone()
+    if cursor_f is None:
+        goal = None
+    else:
+        goal = {
+            "target_minutes": cursor_f[0],
+            "start_date": cursor_f[1],
+            "end_date": cursor_f[2]
+        }
 
     connection.close()
 

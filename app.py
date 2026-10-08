@@ -90,9 +90,9 @@ if "options_goal" not in st.session_state:
         st.session_state["options_goal"]["study_start_date"] = date.today()
         st.session_state["options_goal"]["study_end_date"] = date.today() + timedelta(days=6)
     else:
-        st.session_state["options_goal"]["study_time"] = saved_goal[0]
-        st.session_state["options_goal"]["study_start_date"] = date.fromisoformat(saved_goal[1])
-        st.session_state["options_goal"]["study_end_date"] = date.fromisoformat(saved_goal[2])
+        st.session_state["options_goal"]["study_time"] = saved_goal["target_minutes"]
+        st.session_state["options_goal"]["study_start_date"] = date.fromisoformat(saved_goal["start_date"])
+        st.session_state["options_goal"]["study_end_date"] = date.fromisoformat(saved_goal["end_date"])
 
 st.session_state["settings"].setdefault(
 "time_input_unit",
