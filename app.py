@@ -80,10 +80,10 @@ if "records" not in st.session_state:
 if "settings" not in st.session_state:
     st.session_state["settings"] = get_settings()
 
+saved_goal = get_goal()
+
 if "options_goal" not in st.session_state:
     st.session_state["options_goal"] = {}
-
-    saved_goal = get_goal()
 
     if saved_goal is None:
         st.session_state["options_goal"]["study_time"] = 420
@@ -160,7 +160,7 @@ with record_tab:
                 ),
                 minutes
             )
-            st.session_state["reocrds"] = get_records()
+            st.session_state["records"] = get_records()
             st.success("記録が完了しました")
 
 
@@ -590,12 +590,16 @@ with view_tab:
                     st.session_state["options_goal"]["study_start_date"].isoformat(),
                     st.session_state["options_goal"]["study_end_date"].isoformat(),
                 )
+                st.rerun()
 
+        if saved_goal is None:
+            st.info("目標がまだ設定されていません")
+        else:
             goal_progress = calculate_goal_progress(
                 st.session_state["records"],
-                st.session_state["options_goal"]["study_time"],
-                st.session_state["options_goal"]["study_start_date"],
-                st.session_state["options_goal"]["study_end_date"],
+                saved_goal["target_minutes"],
+                date.fromisoformat(saved_goal["start_date"]),
+                date.fromisoformat(saved_goal["end_date"]),
                 date.today()
             )
 
