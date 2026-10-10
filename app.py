@@ -33,6 +33,14 @@ from subjects import (
     get_subject_options,
     find_existing_subject
 )
+from dashboard_data import (
+    prepare_weekday_data,
+    prepare_weekly_study_days_data,
+    prepare_subject_stats_data,
+    prepare_subject_trend_data,
+    prepare_recent_trend_data,
+    prepare_heatmap_data
+)
 
 initialize_database()
 
@@ -204,26 +212,8 @@ with view_tab:
         average_difference = average_minutes - previous_average_minutes
         formatted_average_difference = format_difference_minutes(average_difference)
         heatmap_data = create_heatmap_data(st.session_state["records"])
-        heatmap_df = pd.DataFrame(heatmap_data)
-        weekday_labels = {0: "月",1: "火",2: "水",3: "木",4: "金",5: "土",6: "日"}
-        heatmap_df["weekday_name"] = heatmap_df["weekday"].map(weekday_labels)
-        month_labels = []
-        previous_month = None
-
-        for item in heatmap_data:
-            current_date = date.fromisoformat(item["date"])
-
-            if current_date.month != previous_month:
-                month_labels.append(
-                    {
-                        "week": item["week"],
-                        "month": f"{current_date.month}月"
-                    }
-                )
-
-                previous_month = current_date.month
-
-        month_df = pd.DataFrame(month_labels)
+        
+        heatmap_df, month_df = prepare_heatmap_data(heatmap_data)
 
         col1, col2 = st.columns(2)
 
@@ -348,53 +338,21 @@ with view_tab:
         )
         daily_statistics = analysis_summary["daily_statistics"]
         weekday_average = analysis_summary["weekday_average"]
-        weekday_average_display = {
-            weekday_labels[weekday]: average
-            for weekday, average in weekday_average.items()
-        }
-        weekday_average_df = pd.DataFrame(
-            list(weekday_average_display.items()),
-            columns=["weekday", "average"]
+        weekday_average_df = prepare_weekday_data(
+            weekday_average,
+            "average"
         )
         recent_trend = analysis_summary["recent_trend"]
-        trend_labels = {"increase": "増加", "decrease": "減少", "stable": "横ばい"}
-        trend_display = trend_labels[recent_trend["trend"]]
-        difference = recent_trend["difference"]
-        if difference > 0:
-            difference_display = f"+{difference}分"
-        elif difference < 0:
-            difference_display = f"{difference}分"
-        else:
-            difference_display = "±0分"
-        change_rate = recent_trend["change_rate"]
-        if change_rate is None:
-            change_rate_display = "比較不可"
-        elif change_rate > 0:
-            change_rate_display = f"+{change_rate}%"
-        elif change_rate < 0:
-            change_rate_display = f"{change_rate}%"
-        elif change_rate == 0:
-            change_rate_display = "±0%"
+        trend_display = prepare_recent_trend_data(recent_trend)
         subject_stats = analysis_summary["subject_stats"]
         subject_trend = analysis_summary["subject_trends"]
         weekday_study_rate = analysis_summary["weekday_study_rate"]
-        weekday_study_rate_display = {
-            weekday_labels[weekday]: rate
-            for weekday, rate in weekday_study_rate.items()
-        }
-        weekday_study_rate_df = pd.DataFrame(
-            list(weekday_study_rate_display.items()),
-            columns=["weekday", "rate"]
-        )
+        weekday_study_rate_df = prepare_weekday_data(
+            weekday_study_rate,
+            "rate"
+            )
         weekly_study_days = analysis_summary["weekly_study_days"]
-        weekly_study_days_df = pd.DataFrame(
-            list(weekly_study_days.items()),
-            columns=["week_start", "study_days"]
-        )
-        weekly_study_days_df["week_start"] = (
-            weekly_study_days_df["week_start"]
-            .dt.strftime("%Y-%m-%d")
-        )
+        weekly_study_days_df = prepare_weekly_study_days_data(weekly_study_days)
 
         if daily_statistics:
             cols1, cols2, cols3 = st.columns(3)
@@ -445,79 +403,21 @@ with view_tab:
             st.metric(
                 "直近7日間の勉強時間",
                 f"{recent_trend["recent_total"]}分",
-                delta=difference_display
+                delta=trend_display["difference_display"]
             )
 
         with trend_col2:
             st.metric(
                 "学習トレンド",
-                trend_display,
-                delta=change_rate_display
+                trend_display["trend_display"],
+                delta=trend_display["change_rate_display"]
             )
-
         if subject_stats:
-            df_subject_stats = pd.DataFrame.from_dict(subject_stats, orient="index").reset_index()
-            df_subject_stats = df_subject_stats.rename(
-                columns={
-                    "index": "科目",
-                    "total_minutes": "合計勉強時間",
-                    "study_days": "学習日数",
-                    "average_minutes": "1日平均",
-                    "last_studied_date": "最終学習日",
-                    "days_since_last_study": "最終学習からの日数"
-                }
-            )
-            df_subject_stats = df_subject_stats.sort_values(
-                by="合計勉強時間",
-                ascending=False
-            )
-            df_subject_stats["合計勉強時間"] = (
-                df_subject_stats["合計勉強時間"]
-                .apply(format_minutes)
-            )
-            df_subject_stats["1日平均"] = (
-                df_subject_stats["1日平均"]
-                .apply(lambda minutes: format_minutes(round(minutes)))
-            )
+            df_subject_stats = prepare_subject_stats_data(subject_stats)
             st.dataframe(df_subject_stats)
 
         if subject_trend:
-            df_subject_trend = pd.DataFrame.from_dict(subject_trend, orient="index").reset_index()
-            df_subject_trend = df_subject_trend.rename(
-                columns={
-                    "index": "科目",
-                    "recent_total": "直近7日",
-                    "previous_total": "前の7日",
-                    "difference": "差分",
-                    "change_rate": "変化率",
-                    "trend": "トレンド"
-                }
-            )
-            df_subject_trend["トレンド"] = (
-                df_subject_trend["トレンド"]
-                .apply(lambda trend: trend_labels[trend])
-            )
-            df_subject_trend["直近7日"]= (
-                df_subject_trend["直近7日"]
-                .apply(lambda recent_total: format_minutes(round(recent_total)))
-            )
-            df_subject_trend["前の7日"] = (
-                df_subject_trend["前の7日"]
-                .apply(lambda previous_total: format_minutes(round(previous_total)))
-            )
-            df_subject_trend["差分"] = (
-                df_subject_trend["差分"]
-                .apply(lambda difference: format_difference_minutes(difference))
-            )
-            df_subject_trend["変化率"] = (
-                df_subject_trend["変化率"]
-                .apply(lambda rate:
-                       "比較不可" if pd.isna(rate)
-                       else f"+{rate}%" if rate > 0
-                       else f"{rate}%" if rate < 0
-                       else "±0%"
-                       )
-            )
+            df_subject_trend = prepare_subject_trend_data(subject_trend)
             st.dataframe(df_subject_trend)
 
         if not weekday_study_rate_df.empty:
