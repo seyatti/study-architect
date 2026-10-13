@@ -2,7 +2,6 @@ import streamlit as st
 from datetime import date, timedelta
 from database import (
     initialize_database,
-    add_record,
     get_records,
     update_record,
     delete_record,
@@ -11,12 +10,13 @@ from database import (
     get_goal
 )
 from subjects import (
-    get_subject_options,
     find_existing_subject
 )
+from time_utils import convert_to_minutes
 from ui.overview_tab import render_overview_tab
 from ui.detail_tab import render_detail_tab
 from ui.goal_tab import render_goal_tab
+from ui.record_tab import render_record_tab
 
 initialize_database()
 
@@ -51,12 +51,6 @@ def create_record_options():
         )
 
     return options
-
-def convert_to_minutes(value, unit):
-    if unit == "hours":
-        return int(round(value * 60))
-    else:
-        return int(value)
 
 if "records" not in st.session_state:
     st.session_state["records"] = get_records()
@@ -97,57 +91,14 @@ record_tab, view_tab, edit_tab, settings_tab = st.tabs(
     ]
 )
 
-
-
 with record_tab:
-    study_date = st.date_input("勉強した日")
-
-    subject_options = get_subject_options(st.session_state["records"])
-    subject_choices = ["新しい科目"] + subject_options
-    selected_subject = st.selectbox(
-        "科目を選択",
-        subject_choices
+    saved = render_record_tab(
+        st.session_state["records"],
+        st.session_state["settings"]
     )
 
-    if selected_subject == "新しい科目":
-        subject = st.text_input(
-            "科目名を入力"
-        )
-    else:
-        subject = selected_subject
-
-    time_input_unit = st.session_state["settings"]["time_input_unit"]
-    if time_input_unit == "hours":
-        study_time = st.number_input(
-            "勉強時間（時）",
-            min_value=st.session_state["settings"]["time_step"] / 60,
-            step=st.session_state["settings"]["time_step"] / 60
-        )
-        minutes = convert_to_minutes(study_time, time_input_unit)
-    else:
-        study_time = st.number_input(
-            "勉強時間（分）",
-            min_value=st.session_state["settings"]["time_step"],
-            step=st.session_state["settings"]["time_step"]
-        )
-        minutes = convert_to_minutes(study_time, time_input_unit)
-
-    if st.button("記録する"):
-        if not subject.strip():
-            st.warning("科目名を入力してください")
-        else:
-            add_record(
-                study_date.isoformat(),
-                find_existing_subject(
-                    subject.strip(),
-                    st.session_state["records"]
-                ),
-                minutes
-            )
-            st.session_state["records"] = get_records()
-            st.success("記録が完了しました")
-
-
+    if saved:
+        st.session_state["records"] = get_records()
 
 with view_tab:
 
