@@ -1,10 +1,5 @@
 import streamlit as st
 from datetime import date, timedelta
-import math
-from analytics import (
-    format_minutes,
-    calculate_goal_progress
-)
 from database import (
     initialize_database,
     add_record,
@@ -13,7 +8,6 @@ from database import (
     delete_record,
     get_settings,
     save_setting,
-    save_goal,
     get_goal
 )
 from subjects import (
@@ -22,6 +16,7 @@ from subjects import (
 )
 from ui.overview_tab import render_overview_tab
 from ui.detail_tab import render_detail_tab
+from ui.goal_tab import render_goal_tab
 
 initialize_database()
 
@@ -185,81 +180,10 @@ with view_tab:
         render_detail_tab(st.session_state["records"])
 
     with goal_tab:
-
-        if "options_goal" not in st.session_state:
-            st.session_state["options_goal"] = {}
-
-        st.session_state["options_goal"]["study_time"] = st.number_input(
-            "目標勉強時間（分）",
-            value = st.session_state["options_goal"]["study_time"],
-            min_value = 1,
-            step=1
+        render_goal_tab(
+            st.session_state["records"],
+            saved_goal
         )
-        st.session_state["options_goal"]["study_start_date"] = st.date_input(
-            "開始日",
-            value = st.session_state["options_goal"]["study_start_date"]
-            )
-        st.session_state["options_goal"]["study_end_date"] = st.date_input(
-            "終了日",
-            value = st.session_state["options_goal"]["study_end_date"]
-            )
-
-        if st.session_state["options_goal"]["study_start_date"] > st.session_state["options_goal"]["study_end_date"]:
-            st.error("開始日が終了日より大きいです")
-        else:
-            if st.button("目標に設定"):
-                save_goal(
-                    st.session_state["options_goal"]["study_time"],
-                    st.session_state["options_goal"]["study_start_date"].isoformat(),
-                    st.session_state["options_goal"]["study_end_date"].isoformat(),
-                )
-                st.rerun()
-
-        if saved_goal is None:
-            st.info("目標がまだ設定されていません")
-        else:
-            goal_progress = calculate_goal_progress(
-                st.session_state["records"],
-                saved_goal["target_minutes"],
-                date.fromisoformat(saved_goal["start_date"]),
-                date.fromisoformat(saved_goal["end_date"]),
-                date.today()
-            )
-
-            goal_col1, goal_col2 = st.columns(2)
-
-            with goal_col1:
-                st.metric(
-                    "実際の勉強時間",
-                    format_minutes(goal_progress["actual_minutes"])
-                )
-
-            with goal_col2:
-                st.progress(
-                    min(goal_progress["achievement_rate"] / 100, 1.0),
-                    text="目標達成率"
-                )
-                st.caption(f"{goal_progress["achievement_rate"]}%")
-
-            goal_col3, goal_col4, goal_col5 = st.columns(3)
-
-            with goal_col3:
-                st.metric(
-                    "残りの勉強時間",
-                    format_minutes(goal_progress["remaining_minutes"])
-                )
-
-            with goal_col4:
-                st.metric(
-                    "残りの日数",
-                    f"{goal_progress["remaining_days"]}日"
-                )
-
-            with goal_col5:
-                st.metric(
-                    "1日に必要な勉強時間",
-                    format_minutes(math.ceil(goal_progress["required_daily_minutes"]))
-                )
 
 
 with edit_tab:
