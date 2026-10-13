@@ -1,7 +1,5 @@
 import streamlit as st
 from datetime import date, timedelta
-import pandas as pd
-import altair as alt
 import math
 from analytics import (
     filtered_records_by_period,
@@ -40,6 +38,12 @@ from dashboard_data import (
     prepare_subject_trend_data,
     prepare_recent_trend_data,
     prepare_heatmap_data
+)
+from ui.charts import (
+    create_weekday_average_chart,
+    create_weekday_study_rate_chart,
+    create_weekly_study_days_chart,
+    create_heatmap_chart
 )
 
 initialize_database()
@@ -264,60 +268,9 @@ with view_tab:
         st.bar_chart(subject_totals)
         st.line_chart(completed_totals)
 
-        heatmap_chart = alt.Chart(heatmap_df).mark_rect(
-            stroke="white",
-            strokeWidth=1
-        ).encode(
-            x=alt.X(
-                "week:O",
-                axis=alt.Axis(
-                    labels=False,
-                    ticks=False,
-                    title=None
-                )
-                ),
-            y=alt.Y("weekday_name:O",
-                    sort=["月", "火", "水", "木", "金", "土", "日"],
-                    title=None
-                    ),
-            color=alt.Color(
-                "level:O",
-                scale=alt.Scale(
-                    domain=[0, 1, 2, 3, 4],
-                    range=[
-                    "#EBEDF0",
-                    "#9BE9A8",
-                    "#40C463",
-                    "#30A14E",
-                    "#216E39"
-                    ]
-                ),
-                legend=alt.Legend(
-                    title="勉強レベル"
-                )
-                ),
-            tooltip=[
-                alt.Tooltip("date:N", title="日付"),
-                alt.Tooltip("minutes:Q", title="勉強時間（分）")
-            ]
-        ).properties(
-            height=120
-        )
-
-        month_chart = alt.Chart(month_df).mark_text(
-            align="left"
-        ).encode(
-            x=alt.X("week:O", axis=None),
-            text=alt.Text("month:N")
-        ).properties(
-            height=20
-        )
-
-        final_chart = alt.vconcat(
-            month_chart,
-            heatmap_chart
-        ).resolve_scale(
-            x="shared"
+        final_chart = create_heatmap_chart(
+            heatmap_df,
+            month_df
         )
 
         st.altair_chart(
@@ -378,22 +331,12 @@ with view_tab:
             st.info("まだ分析できる学習記録がありません")
 
         if not weekday_average_df.empty:
-            weekday_Chart = (
-                alt.Chart(weekday_average_df)
-                .mark_bar()
-                .encode(
-                    x=alt.X(
-                        "weekday:N",
-                        sort=["月", "火", "水", "木", "金", "土", "日"],
-                        axis=alt.Axis(labelAngle=0)
-                    ),
-                    y=alt.Y(
-                        "average:Q"
-                    )
-                )
+            weekday_chart = create_weekday_average_chart(
+                weekday_average_df
             )
+
             st.altair_chart(
-                weekday_Chart,
+                weekday_chart,
                 use_container_width=True
             )
 
@@ -421,40 +364,18 @@ with view_tab:
             st.dataframe(df_subject_trend)
 
         if not weekday_study_rate_df.empty:
-            weekday_study_rate_chart = (
-                alt.Chart(weekday_study_rate_df)
-                .mark_bar()
-                .encode(
-                    x=alt.X(
-                        "weekday:N",
-                        sort=["月", "火", "水", "木", "金", "土", "日"],
-                        axis=alt.Axis(labelAngle=0)
-                    ),
-                    y=alt.Y(
-                        "rate:Q",
-                        scale=alt.Scale(domain=[0, 100]),
-                        axis=alt.Axis(title="学習率(%)")
-                    )
-                )
+            weekday_study_rate_chart = create_weekday_study_rate_chart(
+                weekday_study_rate_df
             )
+
             st.altair_chart(
                 weekday_study_rate_chart,
                 use_container_width=True
             )
 
         if not weekly_study_days_df.empty:
-            weekly_chart = (
-                alt.Chart(weekly_study_days_df)
-                .mark_line(point=True)
-                .encode(
-                    x=alt.X(
-                        "week_start:T"
-                    ),
-                    y=alt.Y(
-                        "study_days:Q",
-                        scale=alt.Scale(domain=[0, 7])
-                    )
-                )
+            weekly_chart = create_weekly_study_days_chart(
+                weekly_study_days_df
             )
             st.altair_chart(
                 weekly_chart,
