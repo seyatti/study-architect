@@ -4,7 +4,6 @@ from database import (
     initialize_database,
     get_records,
     get_settings,
-    save_setting,
     get_goal
 )
 from ui.overview_tab import render_overview_tab
@@ -12,6 +11,7 @@ from ui.detail_tab import render_detail_tab
 from ui.goal_tab import render_goal_tab
 from ui.record_tab import render_record_tab
 from ui.edit_tab import render_edit_tab
+from ui.settings_tab import render_settings_tab
 
 initialize_database()
 
@@ -114,41 +114,17 @@ with edit_tab:
 
 
 with settings_tab:
-    time_step_options = [1, 5, 10, 15, 30, 60]
-    time_unit_options = ["minutes", "hours"]
 
-    time_step = st.selectbox(
-        "勉強時間の入力間隔",
-        time_step_options,
-        index=time_step_options.index(
-            st.session_state["settings"]["time_step"]
-            )
+    new_settings = render_settings_tab(
+        st.session_state["settings"]
     )
 
-    time_input_unit = st.selectbox(
-        "勉強時間の入力単位",
-        time_unit_options,
-        index=time_unit_options.index(
-            st.session_state["settings"]["time_input_unit"]
-            ),
-        format_func=lambda unit: "分" if unit == "minutes" else "時間"
-    )
-
-    if st.button("設定を保存"):
+    if new_settings is not None:
         old_unit = st.session_state["settings"]["time_input_unit"]
 
-        st.session_state["settings"]["time_step"] = time_step
-        st.session_state["settings"]["time_input_unit"] = time_input_unit
+        if old_unit != new_settings["time_input_unit"]:
+            st.session_state["reset_edit_study_time"] = True
 
-        if old_unit != time_input_unit:
-                st.session_state["reset_edit_study_time"] = True
+        st.session_state["settings"].update(new_settings)
 
-        save_setting(
-            "time_step",
-            st.session_state["settings"]["time_step"]
-        )
-        save_setting(
-            "time_input_unit",
-            st.session_state["settings"]["time_input_unit"]
-        )
         st.rerun()
