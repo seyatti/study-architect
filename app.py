@@ -3,54 +3,17 @@ from datetime import date, timedelta
 from database import (
     initialize_database,
     get_records,
-    update_record,
-    delete_record,
     get_settings,
     save_setting,
     get_goal
 )
-from subjects import (
-    find_existing_subject
-)
-from time_utils import convert_to_minutes
 from ui.overview_tab import render_overview_tab
 from ui.detail_tab import render_detail_tab
 from ui.goal_tab import render_goal_tab
 from ui.record_tab import render_record_tab
+from ui.edit_tab import render_edit_tab
 
 initialize_database()
-
-def update_edit_fields():
-    selected = st.session_state["edit_record"]
-    selected_id = selected[0]
-
-    for record in st.session_state["records"]:
-        if record["id"] == selected_id:
-            edit_record = record
-            break
-
-    st.session_state["edit_date"] = date.fromisoformat(
-        edit_record["date"]
-    )
-    st.session_state["edit_subject"] = edit_record["subject"]
-    time_input_unit = st.session_state["settings"]["time_input_unit"]
-    if time_input_unit == "hours":
-        st.session_state["edit_study_time"] = edit_record["minutes"] / 60
-    else:
-        st.session_state["edit_study_time"] = edit_record["minutes"]
-
-def create_record_options():
-    options = []
-
-    for record in st.session_state["records"]:
-        options.append(
-            (
-                record["id"],
-                f"{record['date']} : {record['subject']} : {record['minutes']}"
-            )
-        )
-
-    return options
 
 if "records" not in st.session_state:
     st.session_state["records"] = get_records()
@@ -138,102 +101,15 @@ with view_tab:
 
 
 with edit_tab:
-    delete_options = create_record_options()
 
-    if st.session_state["records"]:
-        selected = st.selectbox(
-            "削除する記録を選んでください",
-            delete_options,
-            format_func=lambda option: option[1]
-        )
+    changed = render_edit_tab(
+        st.session_state["records"],
+        st.session_state["settings"]
+    )
 
-        if st.button("削除する"):
-            delete_id = selected[0]
-
-            delete_record(
-                delete_id
-            )
-
-            st.session_state["records"] = get_records()
-            st.success("記録を削除しました")
-    else:
-        st.write("削除できる記録がありません")
-
-    edit_options = create_record_options()
-
-    if st.session_state["records"]:
-        edit_selected = st.selectbox(
-            "編集する記録を選んでください",
-            edit_options,
-            format_func=lambda option: option[1],
-            key="edit_record",
-            on_change=update_edit_fields
-        )
-        edit_id = edit_selected[0]
-        for record in st.session_state["records"]:
-            if record["id"] == edit_id:
-                edit_record = record
-                break
-
-        time_input_unit = st.session_state["settings"]["time_input_unit"]
-
-        if st.session_state.pop("reset_edit_study_time", False):
-            st.session_state.pop("edit_study_time", None)
-
-        if "edit_date" not in st.session_state:
-            st.session_state["edit_date"] = date.fromisoformat(edit_record["date"])
-
-        if "edit_subject" not in st.session_state:
-            st.session_state["edit_subject"] = edit_record["subject"]
-
-        if "edit_study_time" not in st.session_state:
-            if time_input_unit == "hours":
-                st.session_state["edit_study_time"] = edit_record["minutes"] / 60
-            else:
-                st.session_state["edit_study_time"] = edit_record["minutes"]
-
-        edit_study_date = st.date_input(
-            "編集後の日付",
-            key="edit_date"
-        )
-
-        edit_subject = st.text_input(
-            "編集後の科目名",
-            key="edit_subject"
-        )
-
-        if time_input_unit == "hours":
-            edit_study_time = st.number_input(
-                "編集後の勉強時間（時）",
-                min_value=st.session_state["settings"]["time_step"] / 60,
-                step=st.session_state["settings"]["time_step"] / 60,
-                key="edit_study_time"
-            )
-        else:
-            edit_study_time = st.number_input(
-                "編集後の勉強時間（分）",
-                min_value=st.session_state["settings"]["time_step"],
-                step=st.session_state["settings"]["time_step"],
-                key="edit_study_time"
-            )
-
-        edit_minutes = convert_to_minutes(edit_study_time, time_input_unit)
-        if st.button("更新する"):
-            if not edit_subject.strip():
-                st.warning("科目名を入力してください")
-            else:
-                update_record(
-                    edit_id,
-                    edit_study_date.isoformat(),
-                    find_existing_subject(
-                        edit_subject.strip(),
-                        st.session_state["records"]
-                    ),
-                    edit_minutes
-                )
-                st.session_state["records"] = get_records()
-                st.success("記録を編集しました")
-
+    if changed:
+        st.session_state["records"] = get_records()
+        st.rerun()
 
 
 
