@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import date, timedelta
+from uuid import uuid4
 from database import (
     initialize_database,
     get_records,
@@ -12,8 +13,12 @@ from ui.goal_tab import render_goal_tab
 from ui.record_tab import render_record_tab
 from ui.edit_tab import render_edit_tab
 from ui.settings_tab import render_settings_tab
+from browser_storage import render_record_storage_preview
 
 initialize_database()
+
+if "pending_record" not in st.session_state:
+    st.session_state["pending_record"] = None
 
 if "records" not in st.session_state:
     st.session_state["records"] = get_records()
@@ -45,6 +50,18 @@ st.session_state["settings"].setdefault(
 st.title("Study Architect")
 st.write("学習を記録・分析するアプリ")
 
+if st.session_state.pop("save_success", False):
+    st.success("IndexedDBへの学習記録保存が完了しました")
+
+with st.expander("IndexedDB連携テスト"):
+    browser_records = render_record_storage_preview(st.session_state["pending_record"])
+
+if browser_records is None:
+    st.info("ブラウザの学習記録を読み込み中です...")
+    st.stop()
+
+records_for_analysis = browser_records
+
 record_tab, view_tab, edit_tab, settings_tab = st.tabs(
     [
         "📝 記録",
@@ -55,13 +72,19 @@ record_tab, view_tab, edit_tab, settings_tab = st.tabs(
 )
 
 with record_tab:
-    saved = render_record_tab(
-        st.session_state["records"],
-        st.session_state["settings"]
+    new_record = render_record_tab(
+        records_for_analysis,
+        st.session_state["settings"],
+        save_disabled=st.session_state["pending_record"] is not None,
     )
 
-    if saved:
-        st.session_state["records"] = get_records()
+    if new_record is not None:
+        st.session_state["pending_record"] = {
+            "id": str(uuid4()),
+            **new_record,
+            "attempt": 0,
+        }
+        st.rerun()
 
 with view_tab:
 
@@ -84,14 +107,14 @@ with view_tab:
     with overview_tab:
 
         render_overview_tab(
-            st.session_state["records"],
+            records_for_analysis,
             selected_period
         )
 
 
     with detail_tab:
 
-        render_detail_tab(st.session_state["records"])
+        render_detail_tab(records_for_analysis)
 
     with goal_tab:
         render_goal_tab(
@@ -128,3 +151,4 @@ with settings_tab:
         st.session_state["settings"].update(new_settings)
 
         st.rerun()
+

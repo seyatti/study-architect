@@ -4,12 +4,8 @@ from subjects import (
     get_subject_options,
     find_existing_subject
     )
-from database import (
-    add_record,
-    get_records
-    )
 
-def render_record_tab(records, settings):
+def render_record_tab(records, settings, save_disabled=False):
     study_date = st.date_input("勉強した日")
 
     subject_options = get_subject_options(records)
@@ -42,20 +38,17 @@ def render_record_tab(records, settings):
         )
         minutes = convert_to_minutes(study_time, time_input_unit)
 
-    if st.button("記録する"):
+    if save_disabled:
+        st.info("ブラウザへの保存完了を待っています")
+
+    if st.button("記録する", disabled=save_disabled):
         if not subject.strip():
             st.warning("科目名を入力してください")
         else:
-            add_record(
-                study_date.isoformat(),
-                find_existing_subject(
-                    subject.strip(),
-                    records
-                ),
-                minutes
-            )
-            st.success("記録が完了しました")
+            return {
+                "date": study_date.isoformat(),
+                "subject": find_existing_subject(subject.strip(), records),
+                "minutes": minutes,
+            }
 
-            return True
-
-    return False
+    return None
